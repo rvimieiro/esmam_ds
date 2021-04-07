@@ -26,14 +26,27 @@ ALPHA = 0.05
 
 # global variables
 JACCARD_DSCPT_THRESHOLD = 0.5
+        # what is this?
 
 
 class EsmamDS:
+    """ *sketch*
+    inputs:
+        -> User-defined or hardcoded?
+    outputs:
+        -> formats etc
 
-    def __init__(self, sg_baseline='population',
-                 no_of_ants=NUM_OF_ANTS, min_size_subgroup=MIN_SIZE_SUBGROUP, no_rules_converg=RULES_TO_CONVERGENCE,
+    """
+
+    def __init__(self,
+                 sg_baseline='population',
+                 no_of_ants=NUM_OF_ANTS,
+                 min_size_subgroup=MIN_SIZE_SUBGROUP,
+                 no_rules_converg=RULES_TO_CONVERGENCE,
                  its_to_stagnation=ITS_TO_STAGNATION,
-                 weigh_score=WEIGH_SCORE, logistic_offset=F_LOGISTIC_OFFSET, alpha=ALPHA,
+                 weigh_score=WEIGH_SCORE,
+                 logistic_offset=F_LOGISTIC_OFFSET,
+                 alpha=ALPHA,
                  seed=0):
         self.sg_comp = sg_baseline
         self.no_of_ants = no_of_ants
@@ -65,6 +78,9 @@ class EsmamDS:
         return math.ceil(self.min_size_subgroup * self._Dataset.size)
 
     def _get_population_Survival(self):
+        """Initial condition ?
+        Post condition ?
+        """
 
         kmf = KaplanMeierFitter()
         kmf.fit(self._Dataset.survival_times[1], self._Dataset.events[1],
@@ -73,11 +89,15 @@ class EsmamDS:
         return
 
     def _global_stopping_condition(self):
-        if self._no_of_uncovered_cases == 0 or self._stagnation > self.its_to_stagnation:
+        """Check if global stopping condition is achieved."""
+        if self._no_of_uncovered_cases == 0 or  \
+           self._stagnation > self.its_to_stagnation:
             return True
         return False
 
     def _local_stopping_condition(self, ant_index, converg_test_index):
+        """What is the difference between this and global stopping condition?
+        """
         if ant_index >= self.no_of_ants:
             return True
         elif converg_test_index >= self.no_rules_converg:
@@ -85,14 +105,19 @@ class EsmamDS:
         return False
 
     def get_list(self):
+        """Return a deepcopy of list of discovered rule(s?)."""
         return copy.deepcopy(self.discovered_rule_list)
 
     def _add_rule(self, rule):
+        """Append a rule object to the list of discovered rule(s?).
+           Update (global) covered cases with rule.sub_group_cases(?).
+        """
         self.discovered_rule_list.append(rule)
         self._Dataset.update_covered_cases(rule.sub_group_cases)
         return
 
     def _remove_rule(self, rule_idx):
+        """Remove rule (by index?) from list of discovered rules."""
         rule = self.discovered_rule_list.pop(rule_idx)
         self._Dataset.remove_covered_cases(rule.sub_group_cases)
         return
@@ -451,7 +476,7 @@ class EsmamDS:
         rules = {}
         covered_cases = {}
         size = 0
-        for index, rule in enumerate(self.discovered_rule_list):
+        for _, rule in enumerate(self.discovered_rule_list):
             idx, dic = rule.get_result()
             rules[idx] = dic.copy()
             covered_cases[idx] = rule.sub_group_cases

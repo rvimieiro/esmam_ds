@@ -9,7 +9,8 @@ from algorithm import EsmamDS
 THIS_PATH = str(pathlib.Path(__file__).parent.absolute())+'/'
 SAVE_PATH = str(pathlib.Path(__file__).parent.absolute())+'/_results/'
 DATA_PATH = str(pathlib.Path(__file__).parent.absolute()) + '/datasets/'
-DB_NAMES = ['actg320','breast-cancer','cancer','carcinoma','gbsg2','lung','melanoma','mgus2','mgus','pbc','ptc','uis','veteran','whas500']
+DB_NAMES = ['actg320','breast-cancer','cancer','carcinoma','gbsg2','lung',
+            'melanoma','mgus2','mgus','pbc','ptc','uis','veteran','whas500']
 
 # creates directory for saving results and logs
 if not os.path.exists(os.path.dirname(SAVE_PATH)):
@@ -26,7 +27,8 @@ with open(THIS_PATH+'_seeds.json', 'r') as f:
 def stats_results(sg_baseline, _it_init=0, _dbs_list=None, _save_log=False):
 
     print('\n>> call to <stats_results()>')
-    print('.. this call will execute the ESMAM-DS algorithm for <sg_baseline={complement,population}> on 14dbs/30exp')
+    print('.. this call will execute the ESMAM-DS algorithm for \
+          <sg_baseline={complement,population}> on 14dbs/30exp')
     print('\n\n>>>>> ESMAM-SD_{}'.format(sg_baseline))
 
     if not _dbs_list:
@@ -50,9 +52,11 @@ def stats_results(sg_baseline, _it_init=0, _dbs_list=None, _save_log=False):
             print('..exp {}'.format(exp))
             if sg_baseline == 'population': comp = 'pop'
             else: comp = 'cpm'
-            save_name = SAVE_PATH + 'EsmamDS-{}_{}_exp{}'.format(comp, db_name, exp)
+            save_name = SAVE_PATH + 'EsmamDS-{}_{}_exp{}'.format(comp,
+                                                                 db_name, exp)
 
-            run(file=file, dtypes=dtypes, sg_baseline=sg_baseline, seed=seeds[exp], save_path=save_name, _save_log=_save_log)
+            run(file=file, dtypes=dtypes, sg_baseline=sg_baseline,
+                seed=seeds[exp], save_path=save_name, _save_log=_save_log)
 
         _it_init = 0
 
@@ -70,5 +74,7 @@ def run(file, dtypes, sg_baseline, seed, save_path, _save_log):
 
 
 if __name__ == '__main__':
-    stats_results(sg_baseline='complement', _save_log=True, _it_init=0, _dbs_list=None)
-    stats_results(sg_baseline='population', _save_log=True, _it_init=0, _dbs_list=None)
+    stats_results(sg_baseline='complement', _save_log=True,
+                  _it_init=0, _dbs_list=None)
+    stats_results(sg_baseline='population', _save_log=True,
+                  _it_init=0, _dbs_list=None)
