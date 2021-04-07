@@ -54,7 +54,7 @@ class Rule:
     def is_in(self, rule):
         attr_intersec = self.get_attributes().intersection(rule.get_attributes())
         if attr_intersec == rule.get_attributes():
-            if self.get_terms(attr_intersec).issubset(rule.get_terms()):
+            if self.get_terms().issubset(rule.get_terms()):
                     return True
         return False
 
