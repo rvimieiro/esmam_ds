@@ -45,7 +45,15 @@ class EsmamDS:
         self.alpha = alpha
         self._seed = seed
 
-        print('EsmamDS params: sg_baseline={}, no_of_ants={}, min_size_subgroup={}, no_rules_converg={}, its_to_stagnation={}, logistic_offset={}'.format(sg_baseline,no_of_ants,min_size_subgroup,no_rules_converg,its_to_stagnation,logistic_offset))
+        # Looks like debug only print? Maybe save to a file
+        print('EsmamDS params: sg_baseline={}, no_of_ants={}, \
+               min_size_subgroup={}, no_rules_converg={}, \
+               its_to_stagnation={}, logistic_offset={}'.format(sg_baseline,
+                                                         no_of_ants,
+                                                         min_size_subgroup,
+                                                         no_rules_converg,
+                                                         its_to_stagnation,
+                                                         logistic_offset))
 
         self.discovered_rule_list = []
         self._Dataset = None
@@ -453,7 +461,7 @@ class EsmamDS:
         rules = {}
         covered_cases = {}
         size = 0
-        for index, rule in enumerate(self.discovered_rule_list):
+        for _, rule in enumerate(self.discovered_rule_list):
             idx, dic = rule.get_result()
             rules[idx] = dic.copy()
             covered_cases[idx] = rule.sub_group_cases

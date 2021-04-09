@@ -9,11 +9,20 @@ import random
 from algorithm import EsmamDS
 from datetime import datetime
 
-THIS_PATH = str(pathlib.Path(__file__).parent.absolute())+'/'
-SAVE_PATH = str(pathlib.Path(__file__).parent.absolute())+'/_results_{}/'.format(datetime.now().strftime('%Y%m%d'))
-DATA_PATH = str(pathlib.Path(__file__).parent.absolute()) + '/datasets/'
-DB_NAMES = ['actg320']#'breast-cancer'] ,'cancer','carcinoma','gbsg2','lung','melanoma','mgus2','mgus','pbc','ptc','uis','veteran','whas500']
+THIS_PATH = (str(pathlib.Path(__file__).parent.absolute()) + '/')
 
+SAVE_PATH = (str(pathlib.Path(__file__).parent.absolute()) + \
+            '/_results_{}/'.format(datetime.now().strftime('%Y%m%d')))
+            
+DATA_PATH = str(pathlib.Path(__file__).parent.absolute()) + '/datasets/'
+
+# Files in datasets folders to be processed
+DB_NAMES = ['actg320']
+            # 'breast-cancer' ,'cancer','carcinoma',
+            # 'gbsg2','lung','melanoma','mgus2','mgus','pbc',
+            # 'ptc','uis','veteran','whas500']
+
+# Algorithm parameters
 PARAMS_COMPLEMENT = {'no_of_ants': 100,
                      'min_size_subgroup': 0.05,
                      'no_rules_converg': 5,
