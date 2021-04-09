@@ -44,7 +44,10 @@ class Rule:
         times = self._Dataset.survival_times[1][self.sub_group_cases].to_list() + self._Dataset.survival_times[1][rule.sub_group_cases].to_list()
         events = self._Dataset.events[1][self.sub_group_cases].to_list() + self._Dataset.events[1][rule.sub_group_cases].to_list()
         group_id = ['self']*self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + ['rule']*self._Dataset.survival_times[1][rule.sub_group_cases].shape[0]
-        _, p_val = sm.duration.survdiff(time=times, status=events, group=group_id)
+        try:
+            _, p_val = sm.duration.survdiff(time=times, status=events, group=group_id)
+        except: # equal rules/ rules with no event
+            p_val = 1
 
         if p_val >= alpha:
             return False
@@ -54,7 +57,7 @@ class Rule:
     def is_in(self, rule):
         attr_intersec = self.get_attributes().intersection(rule.get_attributes())
         if attr_intersec == rule.get_attributes():
-            if self.get_terms().issubset(rule.get_terms()):
+            if self.get_terms(attr_intersec).issubset(rule.get_terms()):
                     return True
         return False
 
@@ -96,9 +99,12 @@ class Rule:
     def get_attributes(self):
         return set([term[0] for term in self.get_terms()])
 
-    def get_terms(self):
+    def get_terms(self, attrs=None):
         terms = []
-        for attr in self.antecedent.keys():
+        if not attrs:
+            attrs = self.antecedent.keys()
+
+        for attr in attrs:
             if isinstance(self.antecedent[attr], list) or isinstance(self.antecedent[attr], set):
                 for v in self.antecedent[attr]:
                     terms.append((attr, v))
@@ -118,14 +124,25 @@ class Rule:
             times = self._Dataset.survival_times[1][self.sub_group_cases].to_list() + self._Dataset.survival_times[1].to_list()
             events = self._Dataset.events[1][self.sub_group_cases].to_list() + self._Dataset.events[1].to_list()
             group_id = ['sg'] * self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + ['pop'] * self._Dataset.survival_times[1].shape[0]
-            _, self.p_value = sm.duration.survdiff(time=times, status=events, group=group_id)
+            try:
+                _, self.p_value = sm.duration.survdiff(time=times, status=events, group=group_id)
+            except:
+                print("!! Raise < sm.duration.survdiff > except rule-fitness:")
+                print('...baseline: population')
+                print('rule: {}'.format(self.antecedent))
+                self.p_value = 1
         # against complement
         if self._comparison == 'complement':
             sg = pd.Series('sub_group', index=self.sub_group_cases)
             cpm = pd.Series('complement', index=self._complement_cases)
             group = pd.concat([sg, cpm], axis=0, ignore_index=False).sort_index()
-            _, self.p_value = sm.duration.survdiff(self._Dataset.survival_times[1], self._Dataset.events[1], group)
-
+            try:
+                _, self.p_value = sm.duration.survdiff(self._Dataset.survival_times[1], self._Dataset.events[1], group)
+            except:
+                print("!! Raise < sm.duration.survdiff > except rule-fitness:")
+                print('...baseline: complement')
+                print('rule: {}'.format(self.antecedent))
+                self.p_value = 1
         self.fitness = 1 - self.p_value
 
         return
