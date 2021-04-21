@@ -29,6 +29,7 @@ JACCARD_DSCPT_THRESHOLD = 0.5
 
 
 class EsmamDS:
+    """Discover subgroups with exceptional KM curves."""
 
     def __init__(self, sg_baseline='population',
                  no_of_ants=NUM_OF_ANTS, min_size_subgroup=MIN_SIZE_SUBGROUP, no_rules_converg=RULES_TO_CONVERGENCE,
@@ -46,14 +47,22 @@ class EsmamDS:
         self._seed = seed
 
         # Looks like debug only print? Maybe save to a file
-        print('EsmamDS params: sg_baseline={}, no_of_ants={}, \
-               min_size_subgroup={}, no_rules_converg={}, \
-               its_to_stagnation={}, logistic_offset={}'.format(sg_baseline,
-                                                         no_of_ants,
-                                                         min_size_subgroup,
-                                                         no_rules_converg,
-                                                         its_to_stagnation,
-                                                         logistic_offset))
+        # print('EsmamDS params: sg_baseline={}, no_of_ants={}, \
+        #         min_size_subgroup={}, no_rules_converg={}, \
+        #         its_to_stagnation={}, logistic_offset={}'.format(sg_baseline,
+        #                                                  no_of_ants,
+        #                                                  min_size_subgroup,
+        #                                                  no_rules_converg,
+        #                                                  its_to_stagnation,
+        #                                                  logistic_offset))
+        
+        # print(3*'-', "EsmamDS parameters", 3*'-')
+        # print("sg_baseline:", sg_baseline)
+        # print("no_of_ants:", no_of_ants)
+        # print("min_size_subgroup:", min_size_subgroup)
+        # print("no_rules_converg:", no_rules_converg)
+        # print("its_to_stagnation:", its_to_stagnation)
+        # print("logistic_offset:", logistic_offset)
 
         self.discovered_rule_list = []
         self._Dataset = None
@@ -221,6 +230,12 @@ class EsmamDS:
         return
 
     def fit(self):
+        """Generate a string of rules created and pruned through ant-colony 
+        covering-based approach.
+        Precondition:
+        Postcondition:
+        """
+
         # Initialization
         self._TermsManager = TermsManager(self._Dataset, self.min_case_per_rule, self._seed)
         self._Pruner = Pruner(self._Dataset, self._TermsManager, self.sg_comp)

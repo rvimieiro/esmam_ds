@@ -42,9 +42,14 @@ with open(THIS_PATH+'_seeds.json', 'r') as f:
 
 
 def randomised_search_parameters():
+    """ This needs doc;
+    *guess* -> function to control and run standalone experiments.
+    """
 
     print('\n>> call to {}'.format(randomised_search_parameters))
-    print('.. this call will execute a ramdomized search for parameters configuration of the ESMAM-DS algorithm for <sg_baseline={complement,population}>')
+    # print('.. this call will execute a ramdomized search for parameters \
+    #       configuration of the ESMAM-DS algorithm for \
+    #       <sg_baseline={complement,population}>')
 
     dbs = ['actg320','breast-cancer','ptc']
     no_of_ants = [100, 200, 500, 1000, 3000]
@@ -55,7 +60,9 @@ def randomised_search_parameters():
     logistic_offset = [1, 3, 5, 10]
 
     n_pool = 0.1
-    params = ['no_of_ants', 'min_size_subgroup', 'no_rules_converg', 'its_to_stagnation', 'logistic_offset']
+    
+    params = ['no_of_ants', 'min_size_subgroup', 'no_rules_converg',
+              'its_to_stagnation', 'logistic_offset']
 
     pool = [(ants, size, converg, stag, log) for ants in no_of_ants
                                             for size in min_size_subgroup
@@ -119,8 +126,8 @@ def randomised_search_parameters():
 
 def stats_results(sg_baseline, _it_init=0, _dbs_list=None, _save_log=False):
 
-    print('\n>> call to <stats_results()>')
-    print('.. this call will execute the ESMAM-DS algorithm for <sg_baseline={complement,population}> on 14dbs/30exp')
+    # print('\n>> call to <stats_results()>')
+    # print('.. this call will execute the ESMAM-DS algorithm for <sg_baseline={complement,population}> on 14dbs/30exp')
     print('\n\n>>>>> ESMAM-SD_{}'.format(sg_baseline))
 
     if not _dbs_list:

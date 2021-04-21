@@ -11,11 +11,16 @@ class Pruner:
         self._comparison = sg_comparison
 
     def prune(self, rule):
+        """Prune rule's antecedent while its quality measure does not decrease
+        or rule's length is greater than one condition.
+        At each iteration all conditions are tested for removal, being chosen 
+        the one which promotes maximum overall quality improvement.
+        """
         self.current_rule = copy.deepcopy(rule)
         it = 0
         while len(self.current_rule.antecedent) > 1:
             it += 1
-            pruning_flag = False
+            pruning_flag = False 
             current_antecedent = self.current_rule.antecedent.copy()
 
             for attr in current_antecedent:
@@ -31,5 +36,7 @@ class Pruner:
                     self.current_rule = copy.deepcopy(pruned_rule)
 
             if not pruning_flag:
+                # the overall quality did not increase after pruning procedure
                 break
+                # end of pruning
         return self.current_rule
