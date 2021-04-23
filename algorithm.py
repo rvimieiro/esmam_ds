@@ -230,7 +230,7 @@ class EsmamDS:
         return
 
     def fit(self):
-        """Generate a string of rules created and pruned through ant-colony 
+        """Generate a dictionary of rules created and pruned through ant-colony 
         covering-based approach.
         Precondition:
         Postcondition:
