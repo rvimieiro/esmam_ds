@@ -7,7 +7,8 @@ class Term:
     def __init__(self, attribute, value, dataset, min_case_per_rule):
         self.attribute = attribute
         self.value = value
-        self.covered_cases = self._get_cases(dataset.data, dataset.get_col_index(attribute), value)
+        self.covered_cases = self._get_cases(
+            dataset.data, dataset.get_col_index(attribute), value)
         self._heuristic = None
         self._min_cases = min_case_per_rule
         self.set_heuristic(dataset)
@@ -30,7 +31,8 @@ class Term:
 
         # A POSTERIORI PROBABILITY: P(W|A=V)
         n_classes = 2
-        classes = (data_attr_val[dataset.surv_name] >= survival_average).astype(str)
+        classes = (data_attr_val[dataset.surv_name]
+                   >= survival_average).astype(str)
         prob_posteriori = classes.value_counts(normalize=True).to_dict()
 
         # ENTROPY = -SUM_FOR_ALL_CLASSES[ P(W|A=V) * log2(P(W|A=V)) ]
@@ -44,4 +46,3 @@ class Term:
 
     def get_heuristic(self):
         return self._heuristic
-

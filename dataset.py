@@ -3,17 +3,20 @@ import numpy as np
 
 
 class Dataset:
+    """Take original data as a DataFrame and store data (except for target columns)
+    as an array of observations where each observation is an array of its attributes'
+    values (except for target attributes)"""
 
     def __init__(self, data, attr_survival_name, attr_event_name):
-        self.survival_times = ()
-        self.average_survival = None
-        self.events = ()
-        self.attr_values = {}
-        self.data = None
+        self.survival_times = ()    # a tuple containing survival times of every observation
+        self.average_survival = None    # average survival time of all observations
+        self.events = ()    # array of bool describing survival status of observations
+        self.attr_values = {}   # {'attribute': ['val_1', ..., 'val_n']}
+        self.data = None    # A[n_observations][n_attributes]
 
         self._col_index = {}
         self._uncovered_cases = [True]*data.shape[0]
-        self._original_data = data.copy()
+        self._original_data = data.copy()   # DataFrame
         self._surv_name = attr_survival_name
         self._count = [0]*data.shape[0]
 
@@ -21,7 +24,7 @@ class Dataset:
 
     def _constructor(self, attr_survival_name, attr_event_name):
 
-        data = self._original_data.copy()
+        data = self._original_data.copy()\
 
         self.survival_times = (attr_survival_name, data[attr_survival_name])
         self.average_survival = data[attr_survival_name].mean()
@@ -32,11 +35,18 @@ class Dataset:
 
         col_names = list(data.columns.values)
         self.attr_values = dict.fromkeys(col_names)
+        print(self.attr_values)
+        print()
+        print()
         for name in col_names:
-            # test if set(pd.unique) is redundant ---- DONE
             self.attr_values[name] = list(set(data[name]))
+            print(self.attr_values[name])
+        print()
+        print()
+        print(self.attr_values)
+        print()
+        print()
 
-        # check if this is used elsewhere
         self._col_index = dict.fromkeys(col_names)
         for name in col_names:
             self._col_index[name] = data.columns.get_loc(name)

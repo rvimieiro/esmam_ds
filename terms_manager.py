@@ -13,13 +13,13 @@ class TermsManager:
               np.uint16, np.uint32, np.uint64)
 
     def __init__(self, dataset, min_case_per_rule, seed):
-        self._terms = {} # {Attr: {V: objTerms}}
-        self._attr_values = {} # {Attr: [V]}
-        self._availability = {} # {Attr: T|F}
-        self._pheromone_table = {} # {Attr: {V: float}}
-        self._heuristic_table = {} # {Attr: {V: float}}
-        self._count_table = {} # used in logs {Attr: {V: int}}
-        self._logistic_count_table = {} # used for heuristics
+        self._terms = {}  # {Attr: {V: objTerms}}
+        self._attr_values = {}  # {Attr: [V]}
+        self._availability = {}  # {Attr: T|F}
+        self._pheromone_table = {}  # {Attr: {V: float}}
+        self._heuristic_table = {}  # {Attr: {V: float}}
+        self._count_table = {}  # used in logs {Attr: {V: int}}
+        self._logistic_count_table = {}  # used for heuristics
         self._no_of_terms = 0
         self._Dataset = dataset
         np.random.seed(seed)
@@ -29,7 +29,8 @@ class TermsManager:
 
     def _constructor(self, dataset, min_case_per_rule):
 
-        attr_values = dataset.attr_values.copy()    # Attribute-Values from the entire dataset
+        # Attribute-Values from the entire dataset
+        attr_values = dataset.attr_values.copy()
         heuristic_accum = 0
 
         # TERMS:
@@ -50,19 +51,22 @@ class TermsManager:
         # _pheromone_table: {Attr : {Value : Pheromone}} | _heuristic_table: {Attr : {Value : Heuristic}}
         initial_pheromone = 1 / self._no_of_terms
         for attr, values in self._attr_values.items():
-            self._pheromone_table[attr] = {}.fromkeys(values, initial_pheromone)
+            self._pheromone_table[attr] = {}.fromkeys(
+                values, initial_pheromone)
             self._count_table[attr] = {}.fromkeys(values, 0)
             self._logistic_count_table[attr] = {}.fromkeys(values, 0)
             self._heuristic_table[attr] = {}.fromkeys(values, None)
             for value in values:
-                self._heuristic_table[attr][value] = (self._terms[attr][value].get_heuristic() / heuristic_accum)
+                self._heuristic_table[attr][value] = (
+                    self._terms[attr][value].get_heuristic() / heuristic_accum)
 
         return
 
     def _get_prob_accum(self, antecedent):
 
         data = self._Dataset._original_data
-        data_subset = data.loc[np.all(data[list(antecedent)] == pd.Series(antecedent), axis=1)]
+        data_subset = data.loc[np.all(
+            data[list(antecedent)] == pd.Series(antecedent), axis=1)]
 
         accum = 0
         for attr in self._attr_values.keys():
@@ -72,7 +76,8 @@ class TermsManager:
                 else:
                     values = self._attr_values[attr]
                 for value in values:
-                    accum += self._heuristic_table[attr][value] * self._pheromone_table[attr][value]
+                    accum += self._heuristic_table[attr][value] * \
+                        self._pheromone_table[attr][value]
         return accum
 
     def _get_pheromone_accum(self):
@@ -99,7 +104,8 @@ class TermsManager:
 
         probabilities = []
         data = self._Dataset._original_data
-        data_subset = data.loc[np.all(data[list(antecedent)] == pd.Series(antecedent), axis=1)]
+        data_subset = data.loc[np.all(
+            data[list(antecedent)] == pd.Series(antecedent), axis=1)]
 
         for attr in self._attr_values.keys():
             if self._availability[attr]:
@@ -109,7 +115,8 @@ class TermsManager:
                     values = self._attr_values[attr]
 
                 for value in values:
-                    prob = (self._heuristic_table[attr][value] * self._pheromone_table[attr][value]) / prob_accum
+                    prob = (
+                        self._heuristic_table[attr][value] * self._pheromone_table[attr][value]) / prob_accum
                     probabilities.append((prob, self._terms[attr][value]))
 
         return probabilities
@@ -131,12 +138,15 @@ class TermsManager:
         if not probabilities:
             return None
 
-        nan_check = [math.isnan(p[0]) for p in probabilities]  # very low probabilities result in overflow - NaN values
-        if any(nan_check): # !! resolve this problem better
-            choice_idx = np.random.choice(len(probabilities), size=1)[0] # random with equal probs
+        # very low probabilities result in overflow - NaN values
+        nan_check = [math.isnan(p[0]) for p in probabilities]
+        if any(nan_check):  # !! resolve this problem better
+            choice_idx = np.random.choice(len(probabilities), size=1)[
+                0]  # random with equal probs
         else:
             probs = [prob[0] for prob in probabilities]
-            choice_idx = np.random.choice(len(probabilities), size=1, p=probs)[0]
+            choice_idx = np.random.choice(
+                len(probabilities), size=1, p=probs)[0]
 
         return probabilities[choice_idx][1]
 
@@ -166,7 +176,8 @@ class TermsManager:
         pheromone_normalization = self._get_pheromone_accum()
         for attr, values in self._attr_values.items():
             for value in values:
-                self._pheromone_table[attr][value] = self._pheromone_table[attr][value] / pheromone_normalization
+                self._pheromone_table[attr][value] = self._pheromone_table[attr][value] / \
+                    pheromone_normalization
 
         self._reset_availability()
 
@@ -177,7 +188,8 @@ class TermsManager:
         initial_pheromone = 1 / self._no_of_terms
         self._pheromone_table = {}
         for attr, values in self._attr_values.items():
-            self._pheromone_table[attr] = {}.fromkeys(values, initial_pheromone)
+            self._pheromone_table[attr] = {}.fromkeys(
+                values, initial_pheromone)
             self._count_table[attr] = {}.fromkeys(values, 0)
         return
 
@@ -195,9 +207,10 @@ class TermsManager:
                 term.set_heuristic(dataset)
                 # with both description and cover attenuation (bellow)
                 self._heuristic_table[term.attribute][term.value] = term.get_heuristic()\
-                                                                    * self.dscrpt_attenuation(self._logistic_count_table[term.attribute][term.value], x0=offset)\
-                                                                    * self.cover_attenuation(term, dataset.get_case_count(), weigh_score)
-        accum = sum(list(map(lambda dic: sum(dic.values()), self._heuristic_table.values())))
+                    * self.dscrpt_attenuation(self._logistic_count_table[term.attribute][term.value], x0=offset)\
+                    * self.cover_attenuation(term, dataset.get_case_count(), weigh_score)
+        accum = sum(
+            list(map(lambda dic: sum(dic.values()), self._heuristic_table.values())))
         if accum == 0:
             return False
 
@@ -206,7 +219,8 @@ class TermsManager:
             dic[tpl[0]] = tpl[1] / accum
             return dic
         self._heuristic_table.update({key:
-                                          reduce(lambda dic, tpl: att_heur(dic, tpl), value.items(), {})
+                                      reduce(lambda dic, tpl: att_heur(
+                                          dic, tpl), value.items(), {})
                                       for key, value in self._heuristic_table.items()})
         return True
 
@@ -218,7 +232,8 @@ class TermsManager:
     @staticmethod
     def cover_attenuation(term, all_count, weigh_score):
         cases = term.covered_cases
-        score = sum(list(map(lambda case: weigh_score ** all_count[case], cases))) / len(cases)
+        score = sum(list(map(lambda case: weigh_score **
+                             all_count[case], cases))) / len(cases)
         return score
 
     def add_count(self, attr, v):

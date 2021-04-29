@@ -14,7 +14,8 @@ class Rule:
         self.fitness = 0.0
         self.p_value = None
         self._string_repr = ()
-        self._KMmodel = {'subgroup': KaplanMeierFitter(), 'complement': KaplanMeierFitter()}
+        self._KMmodel = {'subgroup': KaplanMeierFitter(
+        ), 'complement': KaplanMeierFitter()}
         self._complement_cases = []
         self._Dataset = dataset
         self._comparison = comp
@@ -41,12 +42,16 @@ class Rule:
 
     def is_exceptional(self, rule, alpha):
         # calculate p-value btw (new_rule, rule)
-        times = self._Dataset.survival_times[1][self.sub_group_cases].to_list() + self._Dataset.survival_times[1][rule.sub_group_cases].to_list()
-        events = self._Dataset.events[1][self.sub_group_cases].to_list() + self._Dataset.events[1][rule.sub_group_cases].to_list()
-        group_id = ['self']*self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + ['rule']*self._Dataset.survival_times[1][rule.sub_group_cases].shape[0]
+        times = self._Dataset.survival_times[1][self.sub_group_cases].to_list(
+        ) + self._Dataset.survival_times[1][rule.sub_group_cases].to_list()
+        events = self._Dataset.events[1][self.sub_group_cases].to_list(
+        ) + self._Dataset.events[1][rule.sub_group_cases].to_list()
+        group_id = ['self']*self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + \
+            ['rule']*self._Dataset.survival_times[1][rule.sub_group_cases].shape[0]
         try:
-            _, p_val = sm.duration.survdiff(time=times, status=events, group=group_id)
-        except: # equal rules/ rules with no event
+            _, p_val = sm.duration.survdiff(
+                time=times, status=events, group=group_id)
+        except:  # equal rules/ rules with no event
             p_val = 1
 
         if p_val >= alpha:
@@ -58,7 +63,7 @@ class Rule:
         attr_intersec = self.get_attributes().intersection(rule.get_attributes())
         if attr_intersec == rule.get_attributes():
             if self.get_terms(attr_intersec).issubset(rule.get_terms()):
-                    return True
+                return True
         return False
 
     def has_root(self, rule):
@@ -76,12 +81,13 @@ class Rule:
     def _construct_from_items(self, items, terms_mng):
         antecedent = {}
         cases = set()
-        for (attr,val) in items:
+        for (attr, val) in items:
             if attr not in antecedent:
                 antecedent[attr] = {val}
             else:
                 antecedent[attr] = set(antecedent[attr]).union({val})
-            cases = cases.union(set(terms_mng.get_term(attr, val).covered_cases))
+            cases = cases.union(
+                set(terms_mng.get_term(attr, val).covered_cases))
 
         self.antecedent = antecedent.copy()
         self.set_cases(list(cases))
@@ -115,17 +121,22 @@ class Rule:
     def set_cases(self, cases):
         self.sub_group_cases = cases
         self.no_covered_cases = len(cases)
-        self._complement_cases = list(set(self.sub_group_cases) ^ set(self._Dataset.get_instances()))
+        self._complement_cases = list(
+            set(self.sub_group_cases) ^ set(self._Dataset.get_instances()))
         return
 
     def set_fitness(self):
         # against population
         if self._comparison == 'population':
-            times = self._Dataset.survival_times[1][self.sub_group_cases].to_list() + self._Dataset.survival_times[1].to_list()
-            events = self._Dataset.events[1][self.sub_group_cases].to_list() + self._Dataset.events[1].to_list()
-            group_id = ['sg'] * self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + ['pop'] * self._Dataset.survival_times[1].shape[0]
+            times = self._Dataset.survival_times[1][self.sub_group_cases].to_list(
+            ) + self._Dataset.survival_times[1].to_list()
+            events = self._Dataset.events[1][self.sub_group_cases].to_list(
+            ) + self._Dataset.events[1].to_list()
+            group_id = ['sg'] * self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + \
+                ['pop'] * self._Dataset.survival_times[1].shape[0]
             try:
-                _, self.p_value = sm.duration.survdiff(time=times, status=events, group=group_id)
+                _, self.p_value = sm.duration.survdiff(
+                    time=times, status=events, group=group_id)
             except:
                 print("!! Raise < sm.duration.survdiff > except rule-fitness:")
                 print('...baseline: population')
@@ -135,9 +146,11 @@ class Rule:
         if self._comparison == 'complement':
             sg = pd.Series('sub_group', index=self.sub_group_cases)
             cpm = pd.Series('complement', index=self._complement_cases)
-            group = pd.concat([sg, cpm], axis=0, ignore_index=False).sort_index()
+            group = pd.concat([sg, cpm], axis=0,
+                              ignore_index=False).sort_index()
             try:
-                _, self.p_value = sm.duration.survdiff(self._Dataset.survival_times[1], self._Dataset.events[1], group)
+                _, self.p_value = sm.duration.survdiff(
+                    self._Dataset.survival_times[1], self._Dataset.events[1], group)
             except:
                 print("!! Raise < sm.duration.survdiff > except rule-fitness:")
                 print('...baseline: complement')
@@ -155,7 +168,8 @@ class Rule:
             if not term:
                 break
 
-            covered_cases = list(set(term.covered_cases) & set(self.sub_group_cases))
+            covered_cases = list(set(term.covered_cases) &
+                                 set(self.sub_group_cases))
 
             # if len(covered_cases) > 1: == version with subgroup size quality component
             if len(covered_cases) >= min_case_per_rule:
@@ -179,15 +193,18 @@ class Rule:
             if not isinstance(value, set):
                 self.antecedent[key] = {value}
 
-        string = ' & '.join(['({}={})'.format(key, value) for (key, value) in self.antecedent.items()])
+        string = ' & '.join(['({}={})'.format(key, value)
+                             for (key, value) in self.antecedent.items()])
         self._string_repr = (rule_id, string)
         return
 
     def get_full_description(self, rule_comp=None):
 
         if rule_comp:
-            c_intersec = set(self.sub_group_cases).intersection(set(rule_comp.sub_group_cases))
-            c_union = set(self.sub_group_cases).union(set(rule_comp.sub_group_cases))
+            c_intersec = set(self.sub_group_cases).intersection(
+                set(rule_comp.sub_group_cases))
+            c_union = set(self.sub_group_cases).union(
+                set(rule_comp.sub_group_cases))
             jaccard_cover = len(c_intersec)/len(c_union)
 
             d_intersec = self.get_terms().intersection(rule_comp.get_terms())
@@ -199,7 +216,8 @@ class Rule:
                                                                              jaccard_cover,
                                                                              jaccard_descript)
         else:
-            info = '[size={}/{}]'.format(self.no_covered_cases,self._Dataset.size)
+            info = '[size={}/{}]'.format(self.no_covered_cases,
+                                         self._Dataset.size)
         return self.id, self.description, info
 
     def set_KMmodel(self, alpha):
@@ -209,8 +227,10 @@ class Rule:
         complement_times = self._Dataset.survival_times[1].iloc[self._complement_cases]
         complement_events = self._Dataset.events[1].iloc[self._complement_cases]
 
-        self._KMmodel['subgroup'].fit(sub_group_times, sub_group_events, label='estimates', alpha=alpha)
-        self._KMmodel['complement'].fit(complement_times, complement_events, label='KM estimates for complement', alpha=alpha)
+        self._KMmodel['subgroup'].fit(
+            sub_group_times, sub_group_events, label='estimates', alpha=alpha)
+        self._KMmodel['complement'].fit(
+            complement_times, complement_events, label='KM estimates for complement', alpha=alpha)
         return
 
     def get_result(self):

@@ -18,7 +18,7 @@ class Pruner:
         """
         self.current_rule = copy.deepcopy(rule)
         while len(self.current_rule.antecedent) > 1:
-            pruning_flag = False 
+            pruning_flag = False
             # set to True if pruned rule has better quality than original rule
             current_antecedent = self.current_rule.antecedent.copy()
 
@@ -27,7 +27,8 @@ class Pruner:
                 pruned_rule = Rule(self._dataset, self._comparison)
                 pruned_rule.antecedent = current_antecedent.copy()
                 pruned_rule.antecedent.pop(attr, None)
-                pruned_rule.set_cases(self._terms_mgr.get_cases(pruned_rule.antecedent))
+                pruned_rule.set_cases(
+                    self._terms_mgr.get_cases(pruned_rule.antecedent))
                 pruned_rule.set_fitness()
 
                 if pruned_rule.fitness >= self.current_rule.fitness:

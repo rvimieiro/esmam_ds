@@ -15,11 +15,11 @@ from rule import Rule
 from dataset import Dataset
 from pruner import Pruner
 
-# hyper parameters ###:performance
-NUM_OF_ANTS = 100 ###
-MIN_SIZE_SUBGROUP = 0.1 
-RULES_TO_CONVERGENCE = 5 ###
-ITS_TO_STAGNATION = 40 ###
+# DEFAULT parameters
+NUM_OF_ANTS = 1000
+MIN_SIZE_SUBGROUP = 0.1
+RULES_TO_CONVERGENCE = 5
+ITS_TO_STAGNATION = 40
 WEIGH_SCORE = 0.9
 F_LOGISTIC_OFFSET = 5
 ALPHA = 0.05
@@ -55,14 +55,15 @@ class EsmamDS:
         #                                                  no_rules_converg,
         #                                                  its_to_stagnation,
         #                                                  logistic_offset))
-        
-        # print(3*'-', "EsmamDS parameters", 3*'-')
-        # print("sg_baseline:", sg_baseline)
-        # print("no_of_ants:", no_of_ants)
-        # print("min_size_subgroup:", min_size_subgroup)
-        # print("no_rules_converg:", no_rules_converg)
-        # print("its_to_stagnation:", its_to_stagnation)
-        # print("logistic_offset:", logistic_offset)
+
+        print(3*'-', "execution's parameters", 3*'-')
+        print("sg_baseline:", sg_baseline)
+        print("no_of_ants:", no_of_ants)
+        print("min_size_subgroup:", min_size_subgroup)
+        print("no_rules_converg:", no_rules_converg)
+        print("its_to_stagnation:", its_to_stagnation)
+        print("logistic_offset:", logistic_offset)
+        print()
 
         self.discovered_rule_list = []
         self._Dataset = None
@@ -166,13 +167,16 @@ class EsmamDS:
                         if has_root:
                             modif_rule.root(new_rule, rule, self._TermsManager)
                         else:
-                            modif_rule.merge(new_rule, rule, self._TermsManager)
+                            modif_rule.merge(
+                                new_rule, rule, self._TermsManager)
 
-                        if self._can_add_rule(modif_rule, self.get_list()): # modif_rule can be added
+                        # modif_rule can be added
+                        if self._can_add_rule(modif_rule, self.get_list()):
                             self._add_rule(modif_rule)
                             if new_rule.is_exceptional(modif_rule, self.alpha):
                                 continue
-                            else: return False
+                            else:
+                                return False
                         else:   # modif_rule cannot be added
                             continue
 
@@ -185,7 +189,8 @@ class EsmamDS:
 
                         # case: root and merge have similar models
                         if not root_rule.is_exceptional(merged_rule, self.alpha):
-                            if self._can_add_rule(root_rule, self.get_list()):  # root_rule can be added
+                            # root_rule can be added
+                            if self._can_add_rule(root_rule, self.get_list()):
                                 self._add_rule(root_rule)
                                 if new_rule.is_exceptional(root_rule, self.alpha):
                                     continue
@@ -195,36 +200,47 @@ class EsmamDS:
                                 continue
                         # case: root and merge have different models
                         else:
-                            add_merge = self._can_add_rule(merged_rule, self.get_list())
+                            add_merge = self._can_add_rule(
+                                merged_rule, self.get_list())
                             if add_merge:
                                 self._add_rule(merged_rule)
 
-                            add_root = self._can_add_rule(root_rule, self.get_list())
+                            add_root = self._can_add_rule(
+                                root_rule, self.get_list())
                             if add_root:
                                 self._add_rule(root_rule)
 
                             if not add_root and not add_merge:
                                 continue
                             elif add_root and not add_merge:
-                                if new_rule.is_exceptional(root_rule, self.alpha): continue
-                                else: return False
+                                if new_rule.is_exceptional(root_rule, self.alpha):
+                                    continue
+                                else:
+                                    return False
                             elif not add_root and add_merge:
-                                if new_rule.is_exceptional(merged_rule, self.alpha): continue
-                                else: return False
+                                if new_rule.is_exceptional(merged_rule, self.alpha):
+                                    continue
+                                else:
+                                    return False
                             else:
-                                if new_rule.is_exceptional(root_rule, self.alpha) and new_rule.is_exceptional(merged_rule, self.alpha): continue
-                                else: return False
+                                if new_rule.is_exceptional(root_rule, self.alpha) and new_rule.is_exceptional(merged_rule, self.alpha):
+                                    continue
+                                else:
+                                    return False
         return True
 
     def read_data(self, data_path, dtypes=None,
                   attr_survival_name='survival_time',
                   attr_event_name='survival_status'):
+        """Read xz file at data_path and set _Dataset to a Dataset object"""
 
         self._data_path = data_path
         if not dtypes:
-            data = pd.read_csv(data_path, delimiter=',', header=0, index_col=False, compression='xz')
+            data = pd.read_csv(data_path, delimiter=',',
+                               header=0, index_col=False, compression='xz')
         else:
-            data = pd.read_csv(data_path, delimiter=',', header=0, index_col=False, compression='xz', dtype=dtypes)
+            data = pd.read_csv(data_path, delimiter=',', header=0,
+                               index_col=False, compression='xz', dtype=dtypes)
         data.reset_index(drop=True, inplace=True)
         self._Dataset = Dataset(data, attr_survival_name, attr_event_name)
         return
@@ -237,7 +253,8 @@ class EsmamDS:
         """
 
         # Initialization
-        self._TermsManager = TermsManager(self._Dataset, self.min_case_per_rule, self._seed)
+        self._TermsManager = TermsManager(
+            self._Dataset, self.min_case_per_rule, self._seed)
         self._Pruner = Pruner(self._Dataset, self._TermsManager, self.sg_comp)
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
         self._get_population_Survival()
@@ -252,7 +269,8 @@ class EsmamDS:
 
             # updates
             self._TermsManager.pheromone_init()
-            has_update = self._TermsManager.heuristics_updating(self._Dataset, self.weigh_score, self.logistic_offset)
+            has_update = self._TermsManager.heuristics_updating(
+                self._Dataset, self.weigh_score, self.logistic_offset)
             if not has_update:
                 break
 
@@ -266,7 +284,8 @@ class EsmamDS:
                 log_ants[ant_index] = {}
 
                 current_rule = Rule(self._Dataset, self.sg_comp)
-                current_rule.construct(self._TermsManager, self.min_case_per_rule)
+                current_rule.construct(
+                    self._TermsManager, self.min_case_per_rule)
                 log_ants[ant_index]['r_const'] = current_rule.antecedent
                 log_ants[ant_index]['r_const_ft'] = current_rule.fitness
 
@@ -281,9 +300,11 @@ class EsmamDS:
                     if current_rule.fitness > best_rule.fitness:
                         best_rule = copy.deepcopy(current_rule)
 
-                log_ants[ant_index]['pheromone_table'] = self._TermsManager.get_pheromone_table()
+                log_ants[ant_index]['pheromone_table'] = self._TermsManager.get_pheromone_table(
+                )
 
-                self._TermsManager.pheromone_updating(current_rule.antecedent, current_rule.fitness)
+                self._TermsManager.pheromone_updating(
+                    current_rule.antecedent, current_rule.fitness)
                 previous_rule = copy.deepcopy(current_rule)
                 ant_index += 1
 
@@ -301,11 +322,16 @@ class EsmamDS:
 
             # saves iteration logs
             self._log_iterations[self._iterations] = log_ants.copy()
-            self._log_term_count[self._iterations] = self._TermsManager.get_counts_table() # needs to be saved before pheromone_init()
-            self._log_heuristic_table[self._iterations] = self._TermsManager.get_heuristic_table()
+            # needs to be saved before pheromone_init()
+            self._log_term_count[self._iterations] = self._TermsManager.get_counts_table(
+            )
+            self._log_heuristic_table[self._iterations] = self._TermsManager.get_heuristic_table(
+            )
             # updates
             self._TermsManager.att_discovered_terms(best_rule.antecedent)
-            self._log_logistic_count[self._iterations] = self._TermsManager.get_logistic_table() # needs to be saveed after att_discovered_terms()
+            # needs to be saveed after att_discovered_terms()
+            self._log_logistic_count[self._iterations] = self._TermsManager.get_logistic_table(
+            )
 
             self._iterations += 1
 
@@ -319,27 +345,31 @@ class EsmamDS:
         return
 
     def save_results(self, save_path):
-        self._save_SurvivalFunctions(save_path)     # LOG FILE FOR SURVIVAL MODELS
+        # LOG FILE FOR SURVIVAL MODELS
+        self._save_SurvivalFunctions(save_path)
         self._save_RuleModel(save_path)             # LOG FILE FOR RULE-MODEL
-        self._save_RuleSet(save_path)               # LOG FILE FOR FINAL RULESET (organized)
+        # LOG FILE FOR FINAL RULESET (organized)
+        self._save_RuleSet(save_path)
         return
 
     def _save_SurvivalFunctions(self, save_name):
 
         index = self._population_survModel.survival_function_.index.copy()
-        columns = ['times', 'population'] + [rule.id for rule in self.discovered_rule_list]
+        columns = ['times', 'population'] + \
+            [rule.id for rule in self.discovered_rule_list]
         df = pd.DataFrame(columns=columns)
         df.times = index.values
         df.population = self._population_survModel.survival_function_.values
 
         for rule in self.discovered_rule_list:
-            survival_fnc = rule._KMmodel['subgroup'].survival_function_.reindex(index)
+            survival_fnc = rule._KMmodel['subgroup'].survival_function_.reindex(
+                index)
             survival_fnc.fillna(method='ffill', inplace=True)
             df[rule.id] = survival_fnc.values
 
         log_file = '{}_SurvivalModels.csv'.format(save_name)
         df.to_csv(log_file, index=False, header=True)
-        print('... saved: {}'.format(log_file))
+        # print('... saved: {}'.format(log_file))
         return
 
     def _save_RuleModel(self, save_name):
@@ -360,7 +390,7 @@ class EsmamDS:
         df = pd.DataFrame(dic)
         log_file = '{}_RuleModel.csv'.format(save_name)
         df.to_csv(log_file, float_format='%f', index=False)
-        print('... saved: {}'.format(log_file))
+        # print('... saved: {}'.format(log_file))
         return
 
     def _save_RuleSet(self, save_name):
@@ -369,16 +399,21 @@ class EsmamDS:
         # calc matrix functions: pval and description (True values for similarity)
         def sim_model_matrix(rule_list, db, VAR_TIME_NAME='survival_time', VAR_EVENT_NAME='survival_status'):
             rules_idx = list(range(len(rule_list)))
-            matrix = pd.DataFrame(data=None, index=rules_idx, columns=rules_idx)
+            matrix = pd.DataFrame(
+                data=None, index=rules_idx, columns=rules_idx)
             for r1_pos, r2_pos in combinations_with_replacement(rules_idx, 2):
                 r1_cases = rule_list[r1_pos].sub_group_cases
                 r2_cases = rule_list[r2_pos].sub_group_cases
 
-                times = db[VAR_TIME_NAME][r1_cases].to_list() + db[VAR_TIME_NAME][r2_cases].to_list()
-                events = db[VAR_EVENT_NAME][r1_cases].to_list() + db[VAR_EVENT_NAME][r2_cases].to_list()
-                group_id = ['r1'] * db[VAR_TIME_NAME][r1_cases].shape[0] + ['r2'] * db[VAR_TIME_NAME][r2_cases].shape[0]
+                times = db[VAR_TIME_NAME][r1_cases].to_list(
+                ) + db[VAR_TIME_NAME][r2_cases].to_list()
+                events = db[VAR_EVENT_NAME][r1_cases].to_list(
+                ) + db[VAR_EVENT_NAME][r2_cases].to_list()
+                group_id = ['r1'] * db[VAR_TIME_NAME][r1_cases].shape[0] + \
+                    ['r2'] * db[VAR_TIME_NAME][r2_cases].shape[0]
                 try:
-                    _, p_value = sm.duration.survdiff(time=times, status=events, group=group_id)
+                    _, p_value = sm.duration.survdiff(
+                        time=times, status=events, group=group_id)
                 except:  # apparently, get error when rules are equal
                     p_value = 1.0
 
@@ -394,7 +429,8 @@ class EsmamDS:
 
         def sim_dscpt_matrix(rule_list, small=False):
             rules_idx = list(range(len(rule_list)))
-            matrix = pd.DataFrame(data=None, index=rules_idx, columns=rules_idx)
+            matrix = pd.DataFrame(
+                data=None, index=rules_idx, columns=rules_idx)
             for r1_pos, r2_pos in combinations_with_replacement(rules_idx, 2):
                 r1_terms = rule_list[r1_pos].get_terms()
                 r2_terms = rule_list[r2_pos].get_terms()
@@ -424,7 +460,8 @@ class EsmamDS:
         f.close()
 
         printed_rules = []
-        sim_models = sim_model_matrix(self.discovered_rule_list, self._Dataset.get_data())
+        sim_models = sim_model_matrix(
+            self.discovered_rule_list, self._Dataset.get_data())
         sim_descript = sim_dscpt_matrix(self.discovered_rule_list)
 
         for index, rule in enumerate(self.discovered_rule_list):
@@ -447,7 +484,8 @@ class EsmamDS:
                         continue
                     r_id, r_desc, r_info = r_sim.get_full_description(rule)
                     with open(log_file, "a+") as f:
-                        f.write('\n[SM] {}: {} {}'.format(r_id, r_desc, r_info))
+                        f.write('\n[SM] {}: {} {}'.format(
+                            r_id, r_desc, r_info))
                     printed_rules.append(r_id)
 
             # similar descriptions:
@@ -459,19 +497,21 @@ class EsmamDS:
                         continue
                     r_id, r_desc, r_info = r_sim.get_full_description(rule)
                     with open(log_file, "a+") as f:
-                        f.write('\n[SD] {}: {} {}'.format(r_id, r_desc, r_info))
+                        f.write('\n[SD] {}: {} {}'.format(
+                            r_id, r_desc, r_info))
                     printed_rules.append(r_id)
 
         # print legend for disjunction/similar symbols
         f = open(log_file, "a+")
         f.write('\n\n---------\n[SM] similar model\n[SD] similar description')
-        f.write('\n[jaccard-c] jaccard index over coverage\n[jaccard-d] jaccard index over description')
+        f.write(
+            '\n[jaccard-c] jaccard index over coverage\n[jaccard-d] jaccard index over description')
         f.close()
-        print('... saved: {}'.format(log_file))
+        # print('... saved: {}'.format(log_file))
         return
 
     def save_logs(self, save_path):
-        #### JSON LOG FILE
+        # JSON LOG FILE
         # rule model
         rules = {}
         covered_cases = {}
@@ -484,14 +524,20 @@ class EsmamDS:
 
         # metrics
         metrics = {}
-        if len(covered_cases) == 0: ruleCoverage = 0
-        else: ruleCoverage = sum([len(item) for key, item in covered_cases.items()]) / len(covered_cases) / self._Dataset.data.shape[0]
-        ruleCoverageSTD = np.std([len(item) for key, item in covered_cases.items()]) / self._Dataset.data.shape[0]
+        if len(covered_cases) == 0:
+            ruleCoverage = 0
+        else:
+            ruleCoverage = sum([len(item) for key, item in covered_cases.items(
+            )]) / len(covered_cases) / self._Dataset.data.shape[0]
+        ruleCoverageSTD = np.std(
+            [len(item) for key, item in covered_cases.items()]) / self._Dataset.data.shape[0]
         setCovered = list(set(chain(*covered_cases.values())))
         setCoverage = len(setCovered) / self._Dataset.data.shape[0]
         metrics['num_rules'] = len(self.discovered_rule_list)
-        if len(self.discovered_rule_list) == 0: metrics['length'] = 0
-        else: metrics['length'] = size / len(self.discovered_rule_list)
+        if len(self.discovered_rule_list) == 0:
+            metrics['length'] = 0
+        else:
+            metrics['length'] = size / len(self.discovered_rule_list)
         metrics['rule_coverage'] = ruleCoverage
         metrics['rule_coverageSTD'] = ruleCoverageSTD
         metrics['set_coverage'] = setCoverage
@@ -534,5 +580,5 @@ class EsmamDS:
         log_file = '{}_log.json'.format(save_path)
         with open(log_file, 'w') as f:
             f.write(json.dumps(log, indent=2, cls=MyEncoder))
-        print('... saved log-file: {}'.format(log_file))
+        # print('... saved log-file: {}'.format(log_file))
         return
