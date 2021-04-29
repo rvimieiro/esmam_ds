@@ -17,11 +17,7 @@ class Pruner:
         the one which promotes maximum overall quality improvement.
         """
         self.current_rule = copy.deepcopy(rule)
-        it = 0 
-        # apparently not used elsewhere
         while len(self.current_rule.antecedent) > 1:
-            it += 1
-            # why is this being updated? not used elsewhere
             pruning_flag = False 
             # set to True if pruned rule has better quality than original rule
             current_antecedent = self.current_rule.antecedent.copy()
@@ -36,6 +32,7 @@ class Pruner:
 
                 if pruned_rule.fitness >= self.current_rule.fitness:
                     pruning_flag = True
+                    # test if simple attribution works
                     self.current_rule = copy.deepcopy(pruned_rule)
 
             if not pruning_flag:

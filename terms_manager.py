@@ -13,13 +13,13 @@ class TermsManager:
               np.uint16, np.uint32, np.uint64)
 
     def __init__(self, dataset, min_case_per_rule, seed):
-        self._terms = {}
-        self._attr_values = {}
-        self._availability = {}
-        self._pheromone_table = {}
-        self._heuristic_table = {}
-        self._count_table = {}
-        self._logistic_count_table = {}
+        self._terms = {} # {Attr: {V: objTerms}}
+        self._attr_values = {} # {Attr: [V]}
+        self._availability = {} # {Attr: T|F}
+        self._pheromone_table = {} # {Attr: {V: float}}
+        self._heuristic_table = {} # {Attr: {V: float}}
+        self._count_table = {} # used in logs {Attr: {V: int}}
+        self._logistic_count_table = {} # used for heuristics
         self._no_of_terms = 0
         self._Dataset = dataset
         np.random.seed(seed)

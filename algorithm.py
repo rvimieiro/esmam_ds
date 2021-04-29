@@ -15,11 +15,11 @@ from rule import Rule
 from dataset import Dataset
 from pruner import Pruner
 
-# hyper parameters
-NUM_OF_ANTS = 100
-MIN_SIZE_SUBGROUP = 0.1
-RULES_TO_CONVERGENCE = 5
-ITS_TO_STAGNATION = 40
+# hyper parameters ###:performance
+NUM_OF_ANTS = 100 ###
+MIN_SIZE_SUBGROUP = 0.1 
+RULES_TO_CONVERGENCE = 5 ###
+ITS_TO_STAGNATION = 40 ###
 WEIGH_SCORE = 0.9
 F_LOGISTIC_OFFSET = 5
 ALPHA = 0.05

@@ -33,8 +33,10 @@ class Dataset:
         col_names = list(data.columns.values)
         self.attr_values = dict.fromkeys(col_names)
         for name in col_names:
-            self.attr_values[name] = list(set(pd.unique(data[name])))
+            # test if set(pd.unique) is redundant ---- DONE
+            self.attr_values[name] = list(set(data[name]))
 
+        # check if this is used elsewhere
         self._col_index = dict.fromkeys(col_names)
         for name in col_names:
             self._col_index[name] = data.columns.get_loc(name)
