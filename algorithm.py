@@ -16,9 +16,10 @@ from dataset import Dataset
 from pruner import Pruner
 
 # DEFAULT parameters
-NUM_OF_ANTS = 1000
+NUM_OF_ANTS = 1000  # number of iterations for each colony
 MIN_SIZE_SUBGROUP = 0.1
-RULES_TO_CONVERGENCE = 5
+RULES_TO_CONVERGENCE = 5  # consecutive generated rules found to be equal
+# threshold on iterations: iterations that no new cases were covered
 ITS_TO_STAGNATION = 40
 WEIGH_SCORE = 0.9
 F_LOGISTIC_OFFSET = 5
@@ -29,32 +30,34 @@ JACCARD_DSCPT_THRESHOLD = 0.5
 
 
 class EsmamDS:
-    """Discover subgroups with exceptional KM curves."""
+    """Exceptional model mining ant miner diverse search.
+    Discover subgroups with exceptional KM curves."""
 
     def __init__(self, sg_baseline='population',
-                 no_of_ants=NUM_OF_ANTS, min_size_subgroup=MIN_SIZE_SUBGROUP, no_rules_converg=RULES_TO_CONVERGENCE,
+                 no_of_ants=NUM_OF_ANTS,
+                 min_size_subgroup=MIN_SIZE_SUBGROUP,
+                 no_rules_converg=RULES_TO_CONVERGENCE,
                  its_to_stagnation=ITS_TO_STAGNATION,
-                 weigh_score=WEIGH_SCORE, logistic_offset=F_LOGISTIC_OFFSET, alpha=ALPHA,
-                 seed=0, **kwargs):
+                 weigh_score=WEIGH_SCORE,
+                 logistic_offset=F_LOGISTIC_OFFSET,
+                 alpha=ALPHA,
+                 seed=0,
+                 **kwargs):
+        # subgroup comparison (population/complement)
         self.sg_comp = sg_baseline
         self.no_of_ants = no_of_ants
         self.min_size_subgroup = min_size_subgroup
+        # ?intracolonial (consecutive rules must be equal)
         self.no_rules_converg = no_rules_converg
+        # no iterations in which no uncovered cases were covered by the discovered rule
         self.its_to_stagnation = its_to_stagnation
+        # Heuristic related
         self.weigh_score = weigh_score
         self.logistic_offset = logistic_offset
+        # Logrank test / subgroup selection related
         self.alpha = alpha
+        ###
         self._seed = seed
-
-        # Looks like debug only print? Maybe save to a file
-        # print('EsmamDS params: sg_baseline={}, no_of_ants={}, \
-        #         min_size_subgroup={}, no_rules_converg={}, \
-        #         its_to_stagnation={}, logistic_offset={}'.format(sg_baseline,
-        #                                                  no_of_ants,
-        #                                                  min_size_subgroup,
-        #                                                  no_rules_converg,
-        #                                                  its_to_stagnation,
-        #                                                  logistic_offset))
 
         print(3*'-', "execution's parameters", 3*'-')
         print("sg_baseline:", sg_baseline)
@@ -82,6 +85,7 @@ class EsmamDS:
 
     @property
     def min_case_per_rule(self):
+        """Calculate the minimum number of cases that a rule must cover."""
         return math.ceil(self.min_size_subgroup * self._Dataset.size)
 
     def _get_population_Survival(self):
@@ -92,12 +96,18 @@ class EsmamDS:
         self._population_survModel = kmf
         return
 
-    def _global_stopping_condition(self):
+    def _global_stopping_condition(self) -> bool:
+        """End algorithm execution if there are no uncovered cases or stagnation
+        threshold is achieved.
+        """
         if self._no_of_uncovered_cases == 0 or self._stagnation > self.its_to_stagnation:
             return True
         return False
 
-    def _local_stopping_condition(self, ant_index, converg_test_index):
+    def _local_stopping_condition(self, ant_index: int, converg_test_index: int) -> bool:
+        """End a colony of ants if it surpasses the ant count limit or there were
+        no_rules_converg consecutive equal rules created by the ants.
+        """
         if ant_index >= self.no_of_ants:
             return True
         elif converg_test_index >= self.no_rules_converg:
@@ -105,20 +115,29 @@ class EsmamDS:
         return False
 
     def get_list(self):
+        """Return a deep copy of the list of discovered rules."""
         return copy.deepcopy(self.discovered_rule_list)
 
-    def _add_rule(self, rule):
+    def _add_rule(self, rule: Rule):
+        """Append rule to the list of discovered rules and update the number of
+        total covered cases with the number of cases covered by this rule.
+        """
         self.discovered_rule_list.append(rule)
         self._Dataset.update_covered_cases(rule.sub_group_cases)
         return
 
-    def _remove_rule(self, rule_idx):
+    def _remove_rule(self, rule_idx: int):
+        """Remove rule (by its index) from list of discovered rules and update 
+        the number of total covered cases removing the cases covered by removed
+        rule.
+        """
         rule = self.discovered_rule_list.pop(rule_idx)
         self._Dataset.remove_covered_cases(rule.sub_group_cases)
         return
 
-    def _can_add_rule(self, new_rule, rule_list):
-        # check if generated rule can be added to the list
+    def _can_add_rule(self, new_rule: Rule, rule_list: list) -> bool:
+        """Return true if rule new_rule can be added to the list of discovered
+        rules. """
 
         # CASE: new rule is not exceptional
         if new_rule.p_value >= self.alpha:
@@ -232,7 +251,7 @@ class EsmamDS:
     def read_data(self, data_path, dtypes=None,
                   attr_survival_name='survival_time',
                   attr_event_name='survival_status'):
-        """Read xz file at data_path and set _Dataset to a Dataset object"""
+        """Read ~.xz file at data_path and set _Dataset to a Dataset object"""
 
         self._data_path = data_path
         if not dtypes:
@@ -246,31 +265,42 @@ class EsmamDS:
         return
 
     def fit(self):
-        """Generate a dictionary of rules created and pruned through ant-colony 
-        covering-based approach.
-        Precondition:
-        Postcondition:
+        """Algorithm's main procedure. Generate a dictionary of rules created
+        and pruned through ant-colony covering-based approach.
         """
+        no_colonies: int = 0
 
         # Initialization
         self._TermsManager = TermsManager(
-            self._Dataset, self.min_case_per_rule, self._seed)
-        self._Pruner = Pruner(self._Dataset, self._TermsManager, self.sg_comp)
+            self._Dataset,
+            self.min_case_per_rule,
+            self._seed
+        )
+        self._Pruner = Pruner(
+            self._Dataset,
+            self._TermsManager,
+            self.sg_comp
+        )
         self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
         self._get_population_Survival()
 
-        # algorithm
+        # Algorithm's main loop
         begin = datetime.now()
         while not self._global_stopping_condition():
+            colony_birth = datetime.now()
+            no_colonies += 1
 
             # local variables
+            print("Initializing colony no.", no_colonies)
             ant_index = 0
             converg_test_index = 1
 
-            # updates
+            # initialize pheromone table for this colony
             self._TermsManager.pheromone_init()
+            # update global heuristic
             has_update = self._TermsManager.heuristics_updating(
-                self._Dataset, self.weigh_score, self.logistic_offset)
+                self._Dataset, self.weigh_score, self.logistic_offset
+            )
             if not has_update:
                 break
 
@@ -278,20 +308,25 @@ class EsmamDS:
             previous_rule = Rule(self._Dataset, self.sg_comp)
             best_rule = copy.deepcopy(previous_rule)
 
-            # Local search
+            # Local search, each iteration represents an colony.
             log_ants = {}
             while not self._local_stopping_condition(ant_index, converg_test_index):
                 log_ants[ant_index] = {}
 
+                # ant creates an empty rule
                 current_rule = Rule(self._Dataset, self.sg_comp)
                 current_rule.construct(
-                    self._TermsManager, self.min_case_per_rule)
+                    self._TermsManager, self.min_case_per_rule
+                )
                 log_ants[ant_index]['r_const'] = current_rule.antecedent
                 log_ants[ant_index]['r_const_ft'] = current_rule.fitness
 
+                print("---Ant", ant_index, "found:")
+                print("\tRaw rule:", current_rule.antecedent)
                 current_rule = self._Pruner.prune(current_rule)
                 log_ants[ant_index]['r_pr'] = current_rule.antecedent
                 log_ants[ant_index]['r_pr_ft'] = current_rule.fitness
+                print("\tPruned rule:", current_rule.antecedent)
 
                 if current_rule.equals(previous_rule):
                     converg_test_index += 1
@@ -304,12 +339,14 @@ class EsmamDS:
                 )
 
                 self._TermsManager.pheromone_updating(
-                    current_rule.antecedent, current_rule.fitness)
+                    current_rule.antecedent, current_rule.fitness
+                )
                 previous_rule = copy.deepcopy(current_rule)
                 ant_index += 1
 
             # End-of-colony: att rule-list and covered cases
             prev_uncover = self._no_of_uncovered_cases
+            ## prev_uncover: casos nao cobertos pelas regras geradas ate a iteracao atual que estao na lista de regras ##
             if self._can_add_rule(best_rule, self.get_list()):
                 self._add_rule(best_rule)
                 self._no_of_uncovered_cases = self._Dataset.get_no_of_uncovered_cases()
@@ -334,20 +371,32 @@ class EsmamDS:
             )
 
             self._iterations += 1
+            colony_death = datetime.now()
+            print(2*'\n')
+            print("--> Colony's life:", colony_death - colony_birth)
+            print("--> Colony's number of ants:", ant_index)
+            print(2*'\n')
 
         # end-algorithm (some savings)
         self._time = datetime.now() - begin
+        self.print_ant()        
 
         # generates the rules representative strings
+        print(10*'*',' RESULTS ', 10*'*')
         for index, rule in enumerate(self.discovered_rule_list):
             rule.set_string_repr(index)
+            print("Rule", index)
+            print('\t antecedent:', rule.antecedent)
+            print('\t covered cases:', rule.no_covered_cases)
             rule.set_KMmodel(alpha=self.alpha)
+
         return
 
     def save_results(self, save_path):
         # LOG FILE FOR SURVIVAL MODELS
         self._save_SurvivalFunctions(save_path)
-        self._save_RuleModel(save_path)             # LOG FILE FOR RULE-MODEL
+        # LOG FILE FOR RULE-MODEL
+        self._save_RuleModel(save_path)
         # LOG FILE FOR FINAL RULESET (organized)
         self._save_RuleSet(save_path)
         return
@@ -582,3 +631,33 @@ class EsmamDS:
             f.write(json.dumps(log, indent=2, cls=MyEncoder))
         # print('... saved log-file: {}'.format(log_file))
         return
+
+    def print_ant(self):
+        print(r"""
+              "=.                                       
+             "=. \                                      
+                \ \
+             _,-=\/=._        _.-,_
+            /         \      /=-._ "-.
+           |=-./~\___/~\    /     `-._\
+           |   \o/   \o/   /  ESMAM   /
+            \_   `~~~;/    |  rules  |
+              `~,._,-'    /          /
+                 | |      =-._      /
+             _,-=/ \=-._     /|`-._/
+           //           \\   )\
+          /|             |)_.'/
+         //|             |\_."   _.-\
+        (|  \           /    _.`=    \
+        ||   ":_    _.;"_.-;"   _.-=.:
+     _-."/    / `-."\_."        =-_.;\
+    `-_./   /             _.-=.    / \\
+           |              =-_.;\ ."   \\
+           \                   \\/     \\
+           /\_                .'\\      \\
+          //  `=_         _.-"   \\      \\
+         //      `~-.=`"`'       ||      ||
+         ||    _.-_/|            ||      |\_.-_
+     _.-_/|   /_.-._/            |\_.-_  \_.-._\
+    /_.-._/                      \_.-._\
+        """)

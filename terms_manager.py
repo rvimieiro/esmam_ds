@@ -58,8 +58,8 @@ class TermsManager:
             self._heuristic_table[attr] = {}.fromkeys(values, None)
             for value in values:
                 self._heuristic_table[attr][value] = (
-                    self._terms[attr][value].get_heuristic() / heuristic_accum)
-
+                    self._terms[attr][value].get_heuristic() / heuristic_accum
+                )
         return
 
     def _get_prob_accum(self, antecedent):
@@ -125,11 +125,11 @@ class TermsManager:
         return self._no_of_terms
 
     def available(self):
-
+        """Loop through each attribute and check whether it is available to be
+        added in a new rule or if it has already been used."""
         for attr in self._availability:
             if self._availability[attr]:
                 return True
-
         return False
 
     def sort_term(self, antecedent):
@@ -184,7 +184,7 @@ class TermsManager:
         return
 
     def pheromone_init(self):
-        # Restores pheromone initial configuration
+        """Initialize pheromone trails for a new colony of ants."""
         initial_pheromone = 1 / self._no_of_terms
         self._pheromone_table = {}
         for attr, values in self._attr_values.items():

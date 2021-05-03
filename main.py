@@ -23,7 +23,7 @@ DB_NAMES = ['actg320']
 # 'ptc','uis','veteran','whas500']
 
 # Algorithm parameters
-PARAMS_GLOBAL = {'no_of_ants': 10,
+PARAMS_GLOBAL = {'no_of_ants': 1000,
                  'min_size_subgroup': 0.05,
                  'no_rules_converg': 5,
                  'its_to_stagnation': 40,
@@ -169,18 +169,22 @@ def stats_results(sg_baseline, _it_init=0, _dbs_list=None, _save_log=False):
                     seed=seeds[exp], save_path=save_name,
                     _save_log=_save_log, **PARAMS_GLOBAL)
             else:
+                # run(file=file, dtypes=dtypes, sg_baseline=sg_baseline,
+                #     seed=seeds[exp], save_path=save_name,
+                #     _save_log=_save_log, **PARAMS_GLOBAL)
+                # removed seed
                 run(file=file, dtypes=dtypes, sg_baseline=sg_baseline,
-                    seed=seeds[exp], save_path=save_name,
-                    _save_log=_save_log, **PARAMS_GLOBAL)
+                save_path=save_name, _save_log=_save_log, **PARAMS_GLOBAL)
 
         _it_init = 0
 
     return
 
-
-def run(file, dtypes, sg_baseline, seed, save_path, _save_log, **kwargs):
+#def run(file, dtypes, sg_baseline, seed, save_path, _save_log, **kwargs):
+def run(file, dtypes, sg_baseline, save_path, _save_log, **kwargs):
     # ANT-MINER ALGORITHM: list of rules generator
-    esmam = EsmamDS(sg_baseline=sg_baseline, seed=seed, **kwargs)
+    # esmam = EsmamDS(sg_baseline=sg_baseline, seed=seed, **kwargs)
+    esmam = EsmamDS(sg_baseline=sg_baseline, **kwargs)
     esmam.read_data(file, dtypes)
     esmam.fit()
     esmam.save_results(save_path)
@@ -191,8 +195,8 @@ def run(file, dtypes, sg_baseline, seed, save_path, _save_log, **kwargs):
 if __name__ == '__main__':
 
     # pipeline for statistical execution procedure
-    stats_results(sg_baseline='complement', _save_log=True,
-                  _it_init=0, _dbs_list=DB_NAMES)
+    # stats_results(sg_baseline='complement', _save_log=True,
+    #               _it_init=0, _dbs_list=DB_NAMES)
     stats_results(sg_baseline='population', _save_log=True,
                   _it_init=0, _dbs_list=DB_NAMES)
 
