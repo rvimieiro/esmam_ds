@@ -5,6 +5,9 @@ import math
 import os
 import pathlib
 import random
+import cProfile
+import pstats
+import snakeviz
 
 from algorithm import EsmamDS
 from datetime import datetime
@@ -194,9 +197,6 @@ def run(file, dtypes, sg_baseline, save_path, _save_log, **kwargs):
 
 if __name__ == '__main__':
 
-    # pipeline for statistical execution procedure
-    # stats_results(sg_baseline='complement', _save_log=True,
-    #               _it_init=0, _dbs_list=DB_NAMES)
     stats_results(sg_baseline='population', _save_log=True,
                   _it_init=0, _dbs_list=DB_NAMES)
 

@@ -133,16 +133,16 @@ class TermsManager:
         return False
 
     def sort_term(self, antecedent):
-
+        
         probabilities = self._get_probabilities(antecedent)
         if not probabilities:
             return None
 
+        # FIX THIS #
         # very low probabilities result in overflow - NaN values
         nan_check = [math.isnan(p[0]) for p in probabilities]
         if any(nan_check):  # !! resolve this problem better
-            choice_idx = np.random.choice(len(probabilities), size=1)[
-                0]  # random with equal probs
+            choice_idx = np.random.choice(len(probabilities), size=1)[0]  
         else:
             probs = [prob[0] for prob in probabilities]
             choice_idx = np.random.choice(

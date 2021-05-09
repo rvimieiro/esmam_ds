@@ -3,6 +3,7 @@ import json
 import math
 import pandas as pd
 import numpy as np
+import sys
 import statsmodels.api as sm
 from itertools import combinations_with_replacement
 from itertools import chain
@@ -291,7 +292,7 @@ class EsmamDS:
             no_colonies += 1
 
             # local variables
-            print("Initializing colony no.", no_colonies)
+            # print("Initializing colony no.", no_colonies, '\n')
             ant_index = 0
             converg_test_index = 1
 
@@ -321,12 +322,12 @@ class EsmamDS:
                 log_ants[ant_index]['r_const'] = current_rule.antecedent
                 log_ants[ant_index]['r_const_ft'] = current_rule.fitness
 
-                print("---Ant", ant_index, "found:")
-                print("\tRaw rule:", current_rule.antecedent)
+                # print("---Ant", ant_index, "found:")
+                # print("\tRaw rule:", current_rule.antecedent)
                 current_rule = self._Pruner.prune(current_rule)
                 log_ants[ant_index]['r_pr'] = current_rule.antecedent
                 log_ants[ant_index]['r_pr_ft'] = current_rule.fitness
-                print("\tPruned rule:", current_rule.antecedent)
+                # print("\tPruned rule:", current_rule.antecedent)
 
                 if current_rule.equals(previous_rule):
                     converg_test_index += 1
@@ -372,23 +373,30 @@ class EsmamDS:
 
             self._iterations += 1
             colony_death = datetime.now()
-            print(2*'\n')
-            print("--> Colony's life:", colony_death - colony_birth)
-            print("--> Colony's number of ants:", ant_index)
-            print(2*'\n')
+            # print(2*'\n')
+            # print("--> Colony's life:", colony_death - colony_birth)
+            # print("--> Colony's number of ants:", ant_index)
+            # print(2*'\n')
 
         # end-algorithm (some savings)
         self._time = datetime.now() - begin
         self.print_ant()        
 
         # generates the rules representative strings
-        print(10*'*',' RESULTS ', 10*'*')
+        # print(10*'*',' RESULTS ', 10*'*')
+        # print('- Total number of observations:', len(current_rule._Dataset.data))
+        # print('- Average survival time:', current_rule._Dataset.average_survival)
         for index, rule in enumerate(self.discovered_rule_list):
             rule.set_string_repr(index)
-            print("Rule", index)
+            print("Rule", index, '->', rule._string_repr)
+            print()
             print('\t antecedent:', rule.antecedent)
-            print('\t covered cases:', rule.no_covered_cases)
+            print('\t covered cases:', rule.no_covered_cases,)
+            print('\t fitness:', rule.fitness)
+            print('\t p-value:', rule.p_value)
+            print()
             rule.set_KMmodel(alpha=self.alpha)
+            # rule._KMmodel['subgroup'].plot()
 
         return
 

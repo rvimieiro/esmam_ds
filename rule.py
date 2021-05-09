@@ -161,8 +161,7 @@ class Rule:
         return
 
     def construct(self, terms_mgr, min_case_per_rule):
-        """Construct the antecedent of a rule.
-        """
+        """Construct the antecedent of a rule."""
         # ANTECEDENT CONSTRUCTION
         while terms_mgr.available():
 
