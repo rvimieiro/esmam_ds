@@ -16,24 +16,29 @@ class Pruner:
         At each iteration all conditions are tested for removal, being chosen 
         the one which promotes maximum overall quality improvement.
         """
-        self.current_rule = copy.deepcopy(rule)
+        self.current_rule = copy.deepcopy(rule) # pode ser eliminado
+        # salvar somente o antecedente da regra de entrada
+        # obter antecedent.items como lista para iteração
+        # criar Pruned rule aqui
+
         while len(self.current_rule.antecedent) > 1:
             pruning_flag = False
             # set to True if pruned rule has better quality than original rule
-            current_antecedent = self.current_rule.antecedent.copy()
+            current_antecedent = self.current_rule.antecedent.copy() #!
 
             for attr in current_antecedent:
                 # new pruned rule antecedent and cases
                 pruned_rule = Rule(self._dataset, self._comparison)
                 pruned_rule.antecedent = current_antecedent.copy()
+                # atribuir os antecedentes da regra criada fora do while
                 pruned_rule.antecedent.pop(attr, None)
                 pruned_rule.set_cases(
-                    self._terms_mgr.get_cases(pruned_rule.antecedent))
+                    self._terms_mgr.get_cases(pruned_rule.antecedent)
+                )
                 pruned_rule.set_fitness()
 
                 if pruned_rule.fitness >= self.current_rule.fitness:
                     pruning_flag = True
-                    # test if simple attribution works
                     self.current_rule = copy.deepcopy(pruned_rule)
 
             if not pruning_flag:

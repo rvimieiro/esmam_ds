@@ -22,6 +22,7 @@ class TermsManager:
         self._logistic_count_table = {}  # used for heuristics
         self._no_of_terms = 0
         self._Dataset = dataset
+        #instanciar o gerador de números aleatórios, vide tds ref
         np.random.seed(seed)
 
         # build object
@@ -132,6 +133,7 @@ class TermsManager:
                 return True
         return False
 
+    # pensar em outro nome
     def sort_term(self, antecedent):
         
         probabilities = self._get_probabilities(antecedent)
@@ -141,12 +143,13 @@ class TermsManager:
         # FIX THIS #
         # very low probabilities result in overflow - NaN values
         nan_check = [math.isnan(p[0]) for p in probabilities]
-        if any(nan_check):  # !! resolve this problem better
+        # se for NaN, atribuir 0 para evitar escolha
+        # ao resolver, eliminar if abaixo e usar somente o else
+        if any(nan_check):  # !! solve this problem
             choice_idx = np.random.choice(len(probabilities), size=1)[0]  
         else:
             probs = [prob[0] for prob in probabilities]
-            choice_idx = np.random.choice(
-                len(probabilities), size=1, p=probs)[0]
+            choice_idx = np.random.choice(len(probabilities), size=1, p=probs)[0]
 
         return probabilities[choice_idx][1]
 
@@ -156,13 +159,17 @@ class TermsManager:
 
     def get_cases(self, antecedent):
 
-        all_cases = []
-        for attr, value in antecedent.items():
-            all_cases.append(self._terms[attr][value].covered_cases)
+        ### transformar em list-comprehension ###
+        all_cases = [self._terms[attr][value].covered_cases for attr, value in antecedent.items()]
+        # for attr, value in antecedent.items():
+        #     all_cases.append(self._terms[attr][value].covered_cases)
+        ###
 
+        ### transformar em reduce -- functools
         cases = all_cases.pop()
         for case_set in all_cases:
             cases = list(set(cases) & set(case_set))
+        ###
 
         return cases
 

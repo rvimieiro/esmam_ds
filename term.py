@@ -8,7 +8,8 @@ class Term:
         self.attribute = attribute
         self.value = value
         self.covered_cases = self._get_cases(
-            dataset.data, dataset.get_col_index(attribute), value)
+            dataset.data, dataset.get_col_index(attribute), value
+        )
         self._heuristic = None
         self._min_cases = min_case_per_rule
         self.set_heuristic(dataset)
