@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from collections import OrderedDict
 
 
 class Dataset:
@@ -35,9 +36,9 @@ class Dataset:
         data.drop(columns=to_drop, inplace=True)
 
         col_names = list(data.columns.values)
-        self.attr_values = dict.fromkeys(col_names)
+        self.attr_values = OrderedDict.fromkeys(col_names)
         for name in col_names:
-            self.attr_values[name] = list(set(data[name]))
+            self.attr_values[name] = sorted(list(set(data[name])))
 
         self._col_index = dict.fromkeys(col_names)
         for name in col_names:

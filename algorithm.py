@@ -14,7 +14,7 @@ from utils import NoIndent, MyEncoder
 from terms_manager import TermsManager
 from rule import Rule
 from dataset import Dataset
-from pruner import Pruner
+from pruner_prototype import Pruner
 
 # DEFAULT parameters
 NUM_OF_ANTS = 1000  # number of iterations for each colony
@@ -138,7 +138,8 @@ class EsmamDS:
 
     def _can_add_rule(self, new_rule: Rule, rule_list: list) -> bool:
         """Return true if rule new_rule can be added to the list of discovered
-        rules. """
+        rules.
+        """
 
         # CASE: new rule is not exceptional
         if new_rule.p_value >= self.alpha:
@@ -334,7 +335,8 @@ class EsmamDS:
                 else:
                     converg_test_index = 1
                     if current_rule.fitness > best_rule.fitness:
-                        best_rule = copy.deepcopy(current_rule)
+                        # best_rule = copy.deepcopy(current_rule)
+                        best_rule = current_rule
 
                 log_ants[ant_index]['pheromone_table'] = self._TermsManager.get_pheromone_table(
                 )

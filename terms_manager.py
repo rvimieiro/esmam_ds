@@ -1,7 +1,9 @@
+import sys
 import numpy as np
 import pandas as pd
 import math
 import copy
+from collections import OrderedDict
 from functools import reduce
 
 from term import Term
@@ -14,7 +16,7 @@ class TermsManager:
 
     def __init__(self, dataset, min_case_per_rule, seed):
         self._terms = {}  # {Attr: {V: objTerms}}
-        self._attr_values = {}  # {Attr: [V]}
+        self._attr_values = OrderedDict()  # {Attr: [V]}
         self._availability = {}  # {Attr: T|F}
         self._pheromone_table = {}  # {Attr: {V: float}}
         self._heuristic_table = {}  # {Attr: {V: float}}
@@ -23,7 +25,8 @@ class TermsManager:
         self._no_of_terms = 0
         self._Dataset = dataset
         #instanciar o gerador de números aleatórios, vide tds ref
-        np.random.seed(seed)
+        # np.random.seed(seed)
+        self._generator = np.random.default_rng(seed)
 
         # build object
         self._constructor(dataset, min_case_per_rule)
@@ -38,6 +41,7 @@ class TermsManager:
         # constructs _terms, _availability and _attr_values
         for attr, values in attr_values.items():
             values_terms = {}
+            # values.sort()
             for value in values:
                 term_obj = Term(attr, value, dataset, min_case_per_rule)
                 values_terms[value] = term_obj
@@ -50,7 +54,7 @@ class TermsManager:
 
         # TABLES:
         # _pheromone_table: {Attr : {Value : Pheromone}} | _heuristic_table: {Attr : {Value : Heuristic}}
-        initial_pheromone = 1 / self._no_of_terms
+        initial_pheromone = 1.0 / self._no_of_terms
         for attr, values in self._attr_values.items():
             self._pheromone_table[attr] = {}.fromkeys(
                 values, initial_pheromone)
@@ -73,7 +77,8 @@ class TermsManager:
         for attr in self._attr_values.keys():
             if self._availability[attr]:
                 if antecedent:
-                    values = list(data_subset[attr].unique())
+                    # values = list(data_subset[attr].unique())
+                    values = set(data_subset[attr])
                 else:
                     values = self._attr_values[attr]
                 for value in values:
@@ -112,10 +117,13 @@ class TermsManager:
             if self._availability[attr]:
                 if antecedent:
                     values = list(data_subset[attr].unique())
+                    # values = set(data_subset[attr])
+    
                 else:
                     values = self._attr_values[attr]
 
                 for value in values:
+                    # expects sorted values 
                     prob = (
                         self._heuristic_table[attr][value] * self._pheromone_table[attr][value]) / prob_accum
                     probabilities.append((prob, self._terms[attr][value]))
@@ -136,20 +144,24 @@ class TermsManager:
     # pensar em outro nome
     def sort_term(self, antecedent):
         
+        ###
         probabilities = self._get_probabilities(antecedent)
+        ###
         if not probabilities:
             return None
 
-        # FIX THIS #
+        # treating low probability resulting overflow with 0 assignment:
         # very low probabilities result in overflow - NaN values
-        nan_check = [math.isnan(p[0]) for p in probabilities]
-        # se for NaN, atribuir 0 para evitar escolha
-        # ao resolver, eliminar if abaixo e usar somente o else
-        if any(nan_check):  # !! solve this problem
-            choice_idx = np.random.choice(len(probabilities), size=1)[0]  
-        else:
-            probs = [prob[0] for prob in probabilities]
-            choice_idx = np.random.choice(len(probabilities), size=1, p=probs)[0]
+        # nan_check = [math.isnan(p[0]) for p in probabilities]
+        # if any(nan_check):  # !! solve this problem
+        #     choice_idx = np.random.choice(len(probabilities), size=1)[0]  
+        # else:
+        for p in probabilities:
+            if math.isnan(p[0]):
+                p[0] = 0
+
+        probs = [prob[0] for prob in probabilities]
+        choice_idx = self._generator.choice(len(probabilities), size=1, p=probs)[0]
 
         return probabilities[choice_idx][1]
 

@@ -3,11 +3,11 @@ from execution import execute
 
 parser = argparse.ArgumentParser(description='Execute Esmam-DS algorithm.')
 parser.add_argument(
-    'input', default='actg320',
+    '-input', default='datasets/actg320_disc.xz',
     help='The input file path', type=str
 )
 parser.add_argument(
-    'output', default='results/',
+    '-output', default='outputs/',
     help='The output file path', type=str
 )
 parser.add_argument(
