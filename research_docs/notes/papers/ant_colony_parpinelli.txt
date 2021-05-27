@@ -1,0 +1,31 @@
+* Accuracy and comprehensibility of discovered information.
+
+* Discovered knowledge is often expressed in the form of:
+	IF <conditions> THEN <class>
+
+* ACO algorithms are based on the following ideas:
+	1. Each path followed by an ant is associated with a candidate
+solution for a given problem.
+	2. When an ant follows a path, the amount of pheromone deposited on that path is proportional to the quality of the corresponding candidate solution for the target problem.
+	3. When an ant has to choose between two or more paths, the path(s)
+with a larger amount of pheromone have a greater probability of being chosen
+by the ant.
+
+* The design of an ACO algorithm involves the specification of:
+	1. An appropriate representation of the problem, which allows the ants
+to incrementally construct/modify solutions through the use of a probabilistic
+transition rule, based on the amount of pheromone in the trail and on a local
+problem-dependent heurisitc.
+	2. A method to enforce the construction of valid solutions, i.e.,
+solutions that are legal in the real-world situations corresponding to the
+problem definition.
+	3. A problem-dependent heuristic function (eta-letter) that measures
+the quality of items that can be added to the current partial solution.
+	4. A rule for pheromone updating, which specifies how to modify the
+pheromone trail (teta).
+	5. A probabilistic transition rule based on the value of the heuristic
+function (eta) and on the contents of the pheromone trail (teta) that is used
+to iteratively construct a solution.
+
+* Each term is a triple <attribute, operator, value> where the operator
+  element in the triple is a relational operator.
