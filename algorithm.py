@@ -15,6 +15,7 @@ from terms_manager import TermsManager
 from rule import Rule
 from dataset import Dataset
 from pruner_prototype import Pruner
+# from pruner import Pruner
 
 # DEFAULT parameters
 NUM_OF_ANTS = 1000  # number of iterations for each colony
@@ -60,14 +61,14 @@ class EsmamDS:
         ###
         self._seed = seed
 
-        print(3*'-', "execution's parameters", 3*'-')
-        print("sg_baseline:", sg_baseline)
-        print("no_of_ants:", no_of_ants)
-        print("min_size_subgroup:", min_size_subgroup)
-        print("no_rules_converg:", no_rules_converg)
-        print("its_to_stagnation:", its_to_stagnation)
-        print("logistic_offset:", logistic_offset)
-        print()
+        # print(3*'-', "execution's parameters", 3*'-')
+        # print("sg_baseline:", sg_baseline)
+        # print("no_of_ants:", no_of_ants)
+        # print("min_size_subgroup:", min_size_subgroup)
+        # print("no_rules_converg:", no_rules_converg)
+        # print("its_to_stagnation:", its_to_stagnation)
+        # print("logistic_offset:", logistic_offset)
+        # print()
 
         self.discovered_rule_list = []
         self._Dataset = None

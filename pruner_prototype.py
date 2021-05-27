@@ -16,18 +16,26 @@ class Pruner:
         At each iteration all conditions are tested for removal, being chosen 
         the one which promotes maximum overall quality improvement.
         """
-        ## implement print debugging ##
         self.current_rule = rule
+
+        # print("Pruning  ", self.current_rule.antecedent)
+
         pruned_rule = Rule(self._dataset, self._comparison)
 
-        while len(self.current_rule.antecedent) > 1:
-            pruning_flag = False
-            # set to True if pruned rule has better quality than original rule
-            current_antecedent = self.current_rule.antecedent.copy() #!
+        # if len(self.current_rule.antecedent) == 1:
+        #     print("Cannot be pruned: one antecedent only.")
 
-            #for attr_idx in antecedent_idx:
+        pruning_iteration = 1
+        while len(self.current_rule.antecedent) > 1:
+            pruned_rule_has_better_quality = False
+            current_antecedent = self.current_rule.antecedent.copy()
+
+            # print("Pruning iteration {}:".format(pruning_iteration),
+            #       current_antecedent)
+
+            # for attr_idx in antecedent_idx:
             for attr in current_antecedent:
-                # new pruned rule antecedent and cases                
+                # new pruned rule antecedent and cases
                 pruned_rule.antecedent = current_antecedent.copy()
                 # atribuir os antecedentes da regra criada fora do while
                 pruned_rule.antecedent.pop(attr, None)
@@ -37,14 +45,14 @@ class Pruner:
                 pruned_rule.set_fitness()
 
                 if pruned_rule.fitness >= self.current_rule.fitness:
-                    pruning_flag = True
+                    pruned_rule_has_better_quality = True
                     self.current_rule = pruned_rule
+                pruning_iteration += 1
 
-            if not pruning_flag:
-                # the overall quality did not increase after pruning procedure
-                # considering every current attribute
+            if not pruned_rule_has_better_quality:
                 break
-                # end of pruning
 
-        # sys.exit(0)
+        # print("Pruned rule:", self.current_rule.antecedent)
+        # input()
+
         return self.current_rule

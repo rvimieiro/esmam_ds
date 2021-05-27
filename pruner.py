@@ -16,21 +16,30 @@ class Pruner:
         At each iteration all conditions are tested for removal, being chosen 
         the one which promotes maximum overall quality improvement.
         """
-        self.current_rule = copy.deepcopy(rule) # pode ser eliminado
-        # salvar somente o antecedente da regra de entrada
-        # obter antecedent.items como lista para iteração
-        # criar Pruned rule aqui
+        self.current_rule = copy.deepcopy(rule)
+        #r pode ser eliminado;
+        #r salvar somente o antecedente da regra de entrada;
+        #r obter antecedent.items como lista para iteração;
+        #r criar Pruned rule aqui;
 
+        # print("Pruning  ",self.current_rule.antecedent)
+
+        # if len(self.current_rule.antecedent) == 1:
+        #     print("Cannot be pruned: one antecedent only.")
+
+        pruning_iteration = 1
         while len(self.current_rule.antecedent) > 1:
-            pruning_flag = False
-            # set to True if pruned rule has better quality than original rule
-            current_antecedent = self.current_rule.antecedent.copy() #!
+            pruned_rule_has_better_quality = False
+            current_antecedent = self.current_rule.antecedent.copy()
+
+            # print("Pruning iteration {}:".format(pruning_iteration),
+            #       current_antecedent)
 
             for attr in current_antecedent:
-                # new pruned rule antecedent and cases
+                #r new pruned rule antecedent and cases
                 pruned_rule = Rule(self._dataset, self._comparison)
                 pruned_rule.antecedent = current_antecedent.copy()
-                # atribuir os antecedentes da regra criada fora do while
+                #r atribuir os antecedentes da regra criada fora do while
                 pruned_rule.antecedent.pop(attr, None)
                 pruned_rule.set_cases(
                     self._terms_mgr.get_cases(pruned_rule.antecedent)
@@ -38,12 +47,14 @@ class Pruner:
                 pruned_rule.set_fitness()
 
                 if pruned_rule.fitness >= self.current_rule.fitness:
-                    pruning_flag = True
+                    pruned_rule_has_better_quality = True
                     self.current_rule = copy.deepcopy(pruned_rule)
+                pruning_iteration += 1
 
-            if not pruning_flag:
-                # the overall quality did not increase after pruning procedure
-                # considering every current attribute
+            if not pruned_rule_has_better_quality:
                 break
-                # end of pruning
+
+        # print("Pruned rule:", self.current_rule.antecedent)
+        # input()
+
         return self.current_rule
