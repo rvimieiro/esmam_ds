@@ -16,51 +16,62 @@ class Pruner:
         At each iteration all conditions are tested for removal, being chosen 
         the one which promotes maximum overall quality improvement.
         """
-        print(10*'*', "THE PRUNER", 10*'*')
+        print()
+        print(50*'*')
         print()
         self.current_rule = copy.deepcopy(rule)
         print("Received for pruning:", self.current_rule.antecedent)
+        print("\nOriginal fitness:", self.current_rule.fitness)
         print()
-        # r pode ser eliminado;
-        # r salvar somente o antecedente da regra de entrada;
-        # r obter antecedent.items como lista para iteração;
-        # r criar Pruned rule aqui;
 
         if len(self.current_rule.antecedent) == 1:
             print("Cannot be pruned: one antecedent only.")
             print()
+        else:
+            pruning_iteration = 1
+            print("\tInitializing pruning procedure\n")
 
-        pruning_iteration = 1
-        while (len(self.current_rule.antecedent) > 1):
+            while (len(self.current_rule.antecedent) > 1):
 
-            pruned_rule_has_better_quality = False
-            current_antecedent = self.current_rule.antecedent.copy()
+                pruned_rule_has_better_quality = False
+                current_antecedent = self.current_rule.antecedent.copy()
 
-            print("Pruning iteration {}:".format(pruning_iteration),
-                  current_antecedent)
+                print("\tIteration {}, pruning".format(pruning_iteration),
+                      current_antecedent, '\n')
 
-            for attr in current_antecedent:
-                # r new pruned rule antecedent and cases
-                pruned_rule = Rule(self._dataset, self._comparison)
-                pruned_rule.antecedent = current_antecedent.copy()
-                # r atribuir os antecedentes da regra criada fora do while
-                pruned_rule.antecedent.pop(attr, None)
-                pruned_rule.set_cases(
-                    self._terms_mgr.get_cases(pruned_rule.antecedent)
-                )
-                pruned_rule.set_fitness()
+                for attr in current_antecedent:
 
-                if pruned_rule.fitness >= self.current_rule.fitness:
-                    pruned_rule_has_better_quality = True
-                    self.current_rule = copy.deepcopy(pruned_rule)
+                    pruned_rule = Rule(self._dataset, self._comparison)
+                    pruned_rule.antecedent = current_antecedent.copy()
 
-            if not pruned_rule_has_better_quality:
-                break
+                    pruned_rule.antecedent.pop(attr, None)
+                    pruned_rule.set_cases(
+                        self._terms_mgr.get_cases(pruned_rule.antecedent)
+                    )
+                    pruned_rule.set_fitness()
+                    print("\t\t>> Fitness without '{}':".format(
+                        attr), pruned_rule.fitness)
 
-            pruning_iteration += 1
+                    if pruned_rule.fitness >= self.current_rule.fitness:
+                        print("\n\t\t\tPruned rule maintains or improves quality.")
+                        pruned_rule_has_better_quality = True
+                        self.current_rule = copy.deepcopy(pruned_rule)
+                        print("\n\t\t\tSetting resulting rule to",
+                              self.current_rule.antecedent)
+                    else:
+                        print("\n\t\t\tPruned rule decreases quality.")
+                    print()
 
-        print("Pruned rule:", self.current_rule.antecedent)
-        print(self.current_rule.fitness)
-        input()
+                if not pruned_rule_has_better_quality:
+                    print("\tPruning does not improve overall quality.\n")
+                    break
+
+                pruning_iteration += 1
+
+            print("\tEnd of pruning procedure, returning rule:\n")
+            print("\t\t@ Antecedent:", self.current_rule.antecedent)
+            print()
+            print("\t\t@ Fitness:", self.current_rule.fitness)
+            input()
 
         return self.current_rule
