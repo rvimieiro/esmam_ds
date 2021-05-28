@@ -17,6 +17,8 @@ class TermsManager:
     def __init__(self, dataset, min_case_per_rule, seed):
         self._terms = {}  # {Attr: {V: objTerms}}
         self._attr_values = OrderedDict()  # {Attr: [V]}
+        self._attr_keys = None
+        self._attr_items = None
         self._availability = {}  # {Attr: T|F}
         self._pheromone_table = {}  # {Attr: {V: float}}
         self._heuristic_table = {}  # {Attr: {V: float}}
@@ -24,8 +26,6 @@ class TermsManager:
         self._logistic_count_table = {}  # used for heuristics
         self._no_of_terms = 0
         self._Dataset = dataset
-        #instanciar o gerador de números aleatórios, vide tds ref
-        # np.random.seed(seed)
         self._generator = np.random.default_rng(seed)
 
         # build object
@@ -52,12 +52,16 @@ class TermsManager:
             self._attr_values[attr] = values[:]
             self._availability[attr] = True
 
+        self._attr_key_values = self._attr_values.keys()
+        self._attr_items = self._attr_values.items()
+
         # TABLES:
         # _pheromone_table: {Attr : {Value : Pheromone}} | _heuristic_table: {Attr : {Value : Heuristic}}
         initial_pheromone = 1.0 / self._no_of_terms
-        for attr, values in self._attr_values.items():
+        for attr, values in self._attr_items:
             self._pheromone_table[attr] = {}.fromkeys(
-                values, initial_pheromone)
+                values, initial_pheromone
+            )
             self._count_table[attr] = {}.fromkeys(values, 0)
             self._logistic_count_table[attr] = {}.fromkeys(values, 0)
             self._heuristic_table[attr] = {}.fromkeys(values, None)
@@ -74,7 +78,7 @@ class TermsManager:
             data[list(antecedent)] == pd.Series(antecedent), axis=1)]
 
         accum = 0
-        for attr in self._attr_values.keys():
+        for attr in self._attr_key_values:
             if self._availability[attr]:
                 if antecedent:
                     # values = list(data_subset[attr].unique())
@@ -89,7 +93,7 @@ class TermsManager:
     def _get_pheromone_accum(self):
 
         accum = 0
-        for attr, values in self._attr_values.items():
+        for attr, values in self._attr_items:
             for value in values:
                 accum += self._pheromone_table[attr][value]
 
@@ -97,7 +101,7 @@ class TermsManager:
 
     def _reset_availability(self):
 
-        attrs = list(self._attr_values.keys())
+        attrs = list(self._attr_key_values)
         self._availability = {}.fromkeys(attrs, True)
 
         return
@@ -113,17 +117,17 @@ class TermsManager:
         data_subset = data.loc[np.all(
             data[list(antecedent)] == pd.Series(antecedent), axis=1)]
 
-        for attr in self._attr_values.keys():
+        for attr in self._attr_key_values:
             if self._availability[attr]:
                 if antecedent:
                     values = list(data_subset[attr].unique())
                     # values = set(data_subset[attr])
-    
+
                 else:
                     values = self._attr_values[attr]
 
                 for value in values:
-                    # expects sorted values 
+                    # expects sorted values
                     prob = (
                         self._heuristic_table[attr][value] * self._pheromone_table[attr][value]) / prob_accum
                     probabilities.append((prob, self._terms[attr][value]))
@@ -143,7 +147,7 @@ class TermsManager:
 
     # pensar em outro nome
     def sort_term(self, antecedent):
-        
+
         ###
         probabilities = self._get_probabilities(antecedent)
         ###
@@ -154,14 +158,15 @@ class TermsManager:
         # very low probabilities result in overflow - NaN values
         # nan_check = [math.isnan(p[0]) for p in probabilities]
         # if any(nan_check):  # !! solve this problem
-        #     choice_idx = np.random.choice(len(probabilities), size=1)[0]  
+        #     choice_idx = np.random.choice(len(probabilities), size=1)[0]
         # else:
         for p in probabilities:
             if math.isnan(p[0]):
                 p[0] = 0
 
         probs = [prob[0] for prob in probabilities]
-        choice_idx = self._generator.choice(len(probabilities), size=1, p=probs)[0]
+        choice_idx = self._generator.choice(
+            len(probabilities), size=1, p=probs)[0]
 
         return probabilities[choice_idx][1]
 
@@ -172,12 +177,13 @@ class TermsManager:
     def get_cases(self, antecedent):
 
         ### transformar em list-comprehension ###
-        all_cases = [self._terms[attr][value].covered_cases for attr, value in antecedent.items()]
+        all_cases = [self._terms[attr][value].covered_cases for attr,
+                     value in antecedent.items()]
         # for attr, value in antecedent.items():
         #     all_cases.append(self._terms[attr][value].covered_cases)
         ###
 
-        ### transformar em reduce -- functools
+        # transformar em reduce -- functools
         cases = all_cases.pop()
         for case_set in all_cases:
             cases = list(set(cases) & set(case_set))
@@ -193,7 +199,7 @@ class TermsManager:
 
         # Decreasing not used terms: normalization
         pheromone_normalization = self._get_pheromone_accum()
-        for attr, values in self._attr_values.items():
+        for attr, values in self._attr_items:
             for value in values:
                 self._pheromone_table[attr][value] = self._pheromone_table[attr][value] / \
                     pheromone_normalization
@@ -206,7 +212,7 @@ class TermsManager:
         """Initialize pheromone trails for a new colony of ants."""
         initial_pheromone = 1 / self._no_of_terms
         self._pheromone_table = {}
-        for attr, values in self._attr_values.items():
+        for attr, values in self._attr_items:
             self._pheromone_table[attr] = {}.fromkeys(
                 values, initial_pheromone)
             self._count_table[attr] = {}.fromkeys(values, 0)

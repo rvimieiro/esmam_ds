@@ -16,30 +16,34 @@ class Pruner:
         At each iteration all conditions are tested for removal, being chosen 
         the one which promotes maximum overall quality improvement.
         """
+        print(10*'*', "THE PRUNER", 10*'*')
+        print()
         self.current_rule = copy.deepcopy(rule)
-        #r pode ser eliminado;
-        #r salvar somente o antecedente da regra de entrada;
-        #r obter antecedent.items como lista para iteração;
-        #r criar Pruned rule aqui;
+        print("Received for pruning:", self.current_rule.antecedent)
+        print()
+        # r pode ser eliminado;
+        # r salvar somente o antecedente da regra de entrada;
+        # r obter antecedent.items como lista para iteração;
+        # r criar Pruned rule aqui;
 
-        # print("Pruning  ",self.current_rule.antecedent)
-
-        # if len(self.current_rule.antecedent) == 1:
-        #     print("Cannot be pruned: one antecedent only.")
+        if len(self.current_rule.antecedent) == 1:
+            print("Cannot be pruned: one antecedent only.")
+            print()
 
         pruning_iteration = 1
-        while len(self.current_rule.antecedent) > 1:
+        while (len(self.current_rule.antecedent) > 1):
+
             pruned_rule_has_better_quality = False
             current_antecedent = self.current_rule.antecedent.copy()
 
-            # print("Pruning iteration {}:".format(pruning_iteration),
-            #       current_antecedent)
+            print("Pruning iteration {}:".format(pruning_iteration),
+                  current_antecedent)
 
             for attr in current_antecedent:
-                #r new pruned rule antecedent and cases
+                # r new pruned rule antecedent and cases
                 pruned_rule = Rule(self._dataset, self._comparison)
                 pruned_rule.antecedent = current_antecedent.copy()
-                #r atribuir os antecedentes da regra criada fora do while
+                # r atribuir os antecedentes da regra criada fora do while
                 pruned_rule.antecedent.pop(attr, None)
                 pruned_rule.set_cases(
                     self._terms_mgr.get_cases(pruned_rule.antecedent)
@@ -49,12 +53,14 @@ class Pruner:
                 if pruned_rule.fitness >= self.current_rule.fitness:
                     pruned_rule_has_better_quality = True
                     self.current_rule = copy.deepcopy(pruned_rule)
-                pruning_iteration += 1
 
             if not pruned_rule_has_better_quality:
                 break
 
-        # print("Pruned rule:", self.current_rule.antecedent)
-        # input()
+            pruning_iteration += 1
+
+        print("Pruned rule:", self.current_rule.antecedent)
+        print(self.current_rule.fitness)
+        input()
 
         return self.current_rule

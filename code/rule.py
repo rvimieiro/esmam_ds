@@ -44,10 +44,13 @@ class Rule:
         # calculate p-value btw (new_rule, rule)
         times = self._Dataset.survival_times[1][self.sub_group_cases].to_list(
         ) + self._Dataset.survival_times[1][rule.sub_group_cases].to_list()
+
         events = self._Dataset.events[1][self.sub_group_cases].to_list(
         ) + self._Dataset.events[1][rule.sub_group_cases].to_list()
+
         group_id = ['self']*self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + \
             ['rule']*self._Dataset.survival_times[1][rule.sub_group_cases].shape[0]
+
         try:
             _, p_val = sm.duration.survdiff(
                 time=times, status=events, group=group_id)
@@ -130,8 +133,10 @@ class Rule:
         if self._comparison == 'population':
             times = self._Dataset.survival_times[1][self.sub_group_cases].to_list(
             ) + self._Dataset.survival_times[1].to_list()
+
             events = self._Dataset.events[1][self.sub_group_cases].to_list(
             ) + self._Dataset.events[1].to_list()
+            
             group_id = ['sg'] * self._Dataset.survival_times[1][self.sub_group_cases].shape[0] + \
                 ['pop'] * self._Dataset.survival_times[1].shape[0]
             try:
