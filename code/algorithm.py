@@ -14,8 +14,8 @@ from utils import NoIndent, MyEncoder
 from terms_manager import TermsManager
 from rule import Rule
 from dataset import Dataset
-# from pruner_prototype import Pruner
-from pruner import Pruner
+from pruner_prototype import Pruner
+# from pruner import Pruner
 
 # DEFAULT parameters
 NUM_OF_ANTS = 1000  # number of iterations for each colony
