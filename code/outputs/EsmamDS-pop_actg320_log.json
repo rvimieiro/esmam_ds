@@ -37,11 +37,11 @@
     }
   },
   "run": {
-    "timestamp": "2021-05-31 21:47:25.010411",
+    "timestamp": "2021-06-02 09:03:52.489433",
     "data_path": "datasets/actg320_disc.xz",
     "data_shape": [1151, 13],
     "num_of_terms": 39,
-    "run_time": "0:00:04.595124",
+    "run_time": "0:00:02.659013",
     "num_iterations": 2,
     "np_seed": 0,
     "uncovered_cases": [],

@@ -7,20 +7,46 @@ class Dataset:
     """Take original data as a DataFrame and store data (except for target columns)
     as an array of observations where each observation is an array of its attributes'
     values (except for target attributes)"""
+    # interface do programa com o disco/bd/raw_data
+
+    # def __init__(self, file_path, attr_survival_name, attr_event_name)
+    # idealmente
+    # pandas dataframe pra armazenar dados originais, np.array para o restante do programa
 
     def __init__(self, data, attr_survival_name, attr_event_name):
+        #to be removed, get through function
         self.survival_times = ()    # a tuple containing survival times of every observation
-        self.average_survival = None    # average survival time of all observations
-        self.events = ()    # array of bool describing survival status of observations
-        self.attr_values = {}   # {'attribute': ['val_1', ..., 'val_n']}
-        self.data = None    # A[n_observations][n_attributes]
 
+        # to be removed, get through function  
+        self.average_survival = None    # average survival time of all observations
+
+        #to be removed, get through function
+        self.events = ()    # array of bool describing survival status of observations
+
+        #to be removed
+        self.attr_values = {}   # {'attribute': ['val_1', ..., 'val_n']}
+
+        self.data = None    # A[n_observations][n_attributes]
+        # self.__data = None -> DF
+
+        #to be removed, access through index
         self._col_index = {}
+
+        #to be removed, should be in algorithm, np.array
         self._uncovered_cases = [True]*data.shape[0]    # initially, all observations are uncovered
-        self._original_data = data.copy()   # DataFrame
+
+        #to be removed
+        self._original_data = data.copy()   # DataFrame --- Redundante ---
+        
+        ## should stay
         self._surv_name = attr_survival_name # name of column storing survival times
+        # self._surv_time_col, handle censoring definitions in docs
+
         self._event_name = attr_event_name # name of column storing censoring info
-        self._count = [0]*data.shape[0] 
+        # self._surv_name_col
+        
+        # self._count = [0]*data.shape[0] - deveria estar provavelmente no Terms Manager
+        self._count = [0]*data.shape[0]  
 
         self._constructor(attr_survival_name, attr_event_name)
 

@@ -14,8 +14,8 @@ from utils import NoIndent, MyEncoder
 from terms_manager import TermsManager
 from rule import Rule
 from dataset import Dataset
-# from pruner_prototype import Pruner
-from pruner import Pruner
+from pruner_prototype import Pruner
+# from pruner import Pruner
 
 # DEFAULT parameters
 NUM_OF_ANTS = 1000  # number of iterations for each colony
@@ -254,6 +254,7 @@ class EsmamDS:
     def read_data(self, data_path, dtypes=None,
                   attr_survival_name='survival_time',
                   attr_event_name='survival_status'):
+        # should be Dataset's function
         """Read ~.xz file at data_path and set _Dataset to a Dataset object"""
 
         self._data_path = data_path

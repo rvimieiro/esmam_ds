@@ -10,7 +10,7 @@ class Pruner:
         self.current_rule = None
         self._comparison = sg_comparison
 
-    def prune(self, rule, verbose=False):
+    def prune(self, rule: Rule, verbose=False) -> Rule:
         """Prune rule's antecedent while its quality measure does not decrease
         or rule's length is greater than one condition.
         At each iteration all conditions are tested for removal, being chosen 
@@ -37,33 +37,29 @@ class Pruner:
                 print("\tInitializing pruning procedure\n")
 
             while len(self.current_rule.antecedent) > 1:
-
-                pruned_rule_has_better_quality = False
-                current_antecedent = self.current_rule.antecedent.copy()
-
                 if verbose:
                     print("\tIteration {}, pruning".format(pruning_iteration),
-                          current_antecedent, '\n')
-
+                          self.current_rule.antecedent, '\n')
                 temp = (self.current_rule.fitness, None)
-                for attr in current_antecedent:
-
-                    pruned_rule.antecedent = current_antecedent.copy()
+                for attr in self.current_rule.antecedent:
+                    pruned_rule.antecedent = self.current_rule.antecedent.copy()
                     pruned_rule.antecedent.pop(attr, None)
                     pruned_rule.set_cases(
-                        self._terms_mgr.get_cases(pruned_rule.antecedent))
+                        self._terms_mgr.get_cases(
+                            pruned_rule.antecedent
+                        )
+                    )
                     pruned_rule.set_fitness()
                     if verbose:
                         print("\t\t>> Fitness without '{}':".format(attr),
                               pruned_rule.fitness)
-
                     if pruned_rule.fitness >= temp[0]:
+                        temp = (pruned_rule.fitness, attr)
                         if verbose:
                             print(
                                 "\n\t\t\tPruned rule maintains or improves quality.")
                             print(
                                 "\n\t\t\tSetting '{}' attribute for removal".format(attr))
-                        temp = (pruned_rule.fitness, attr)
                     else:
                         if verbose:
                             print("\n\t\t\tPruned rule decreases quality.")
@@ -82,9 +78,10 @@ class Pruner:
 
                 pruning_iteration += 1
 
-            # rule treatment
+            # Setting final rule's fitness
             self.current_rule.set_cases(
-                self._terms_mgr.get_cases(self.current_rule.antecedent))
+                self._terms_mgr.get_cases(self.current_rule.antecedent)
+            )
             self.current_rule.set_fitness()
 
             if verbose:

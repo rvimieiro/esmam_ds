@@ -10,7 +10,7 @@ class Pruner:
         self.current_rule = None
         self._comparison = sg_comparison
 
-    def prune(self, rule, verbose=True):
+    def prune(self, rule, verbose=False):
         """Prune rule's antecedent while its quality measure does not decrease
         or rule's length is greater than one condition.
         At each iteration all conditions are tested for removal, being chosen 
@@ -44,7 +44,6 @@ class Pruner:
                           current_antecedent, '\n')
 
                 for attr in current_antecedent:
-
                     pruned_rule = Rule(self._dataset, self._comparison)
                     pruned_rule.antecedent = current_antecedent.copy()
 
