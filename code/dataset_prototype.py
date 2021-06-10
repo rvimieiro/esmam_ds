@@ -21,6 +21,8 @@ class Dataset:
 
         self.item_map = {}
 
+        self.binary_transactions = None
+
         # name of column storing survival times
         self._surv_col_name = attr_survival_name
 
@@ -72,6 +74,9 @@ class Dataset:
                 print(3*'\n')
                 input()
 
+    def set_binary_transactions(self):
+        self.binary_transactions = self.DataFrame['bArray'].to_numpy()
+        print(self.binary_transactions)
 
 
 if __name__ == "__main__":
@@ -81,6 +86,6 @@ if __name__ == "__main__":
     ds.map_items()
     ds.make_transaction_bit_array(verbose=False)
 
-    print(ds.DataFrame)
+    # print(ds.DataFrame)
 
     # sandbox
