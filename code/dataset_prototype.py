@@ -53,7 +53,7 @@ class Dataset:
         self.DataFrame['bArray'] = ''
         sample_transaction = np.random.randint(0, 100)
         for item in self.item_map:
-            attribute, value = item.split('%')            
+            attribute, value = item.split('%')
 
             self.DataFrame.loc[self.DataFrame[attribute]
                                == value, 'bArray'] += '1'
@@ -74,9 +74,12 @@ class Dataset:
                 print(3*'\n')
                 input()
 
-    def set_binary_transactions(self):
-        self.binary_transactions = self.DataFrame['bArray'].to_numpy()
-        print(self.binary_transactions)
+        self.DataFrame['bArray'] = self.DataFrame['bArray'].apply(
+            lambda x: (list(map(int, x)))
+        )
+
+        self.binary_transactions = np.array(self.DataFrame['bArray'].tolist())
+        self.DataFrame = self.DataFrame.drop('bArray', axis=1)
 
 
 if __name__ == "__main__":
@@ -85,7 +88,5 @@ if __name__ == "__main__":
     ds.save_dataframe()
     ds.map_items()
     ds.make_transaction_bit_array(verbose=False)
-
-    # print(ds.DataFrame)
 
     # sandbox
