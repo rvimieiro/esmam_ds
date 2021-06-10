@@ -10,6 +10,7 @@ from term import Term
 
 
 class TermsManager:
+    """"""
     NP_INT = (np.int_, np.intc, np.intp, np.int8,
               np.int16, np.int32, np.int64, np.uint8,
               np.uint16, np.uint32, np.uint64)
@@ -17,6 +18,7 @@ class TermsManager:
     def __init__(self, dataset, min_case_per_rule, seed):
         self._terms = {}  # {Attr: {V: objTerms}}
         self._attr_values = OrderedDict()  # {Attr: [V]}
+        # deve agora ser acessado por inteiros (attr,valor) = (int)
         self._attr_keys = None
         self._attr_items = None
         self._availability = {}  # {Attr: T|F}
