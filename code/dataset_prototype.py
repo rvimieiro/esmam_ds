@@ -21,8 +21,7 @@ class Dataset:
 
         self._surv_col_name = attr_survival_name
 
-        self._event_col_name = attr_event_name
-        # status mudar
+        self._status_col_name = attr_event_name
 
         self.attribute_columns = None
 
@@ -39,13 +38,13 @@ class Dataset:
 
     @property
     def status(self) -> np.array:
-        return self.DataFrame[self._event_col_name].values
+        return self.DataFrame[self._status_col_name].values
 
     def map_items(self) -> None:
         """Map unique items from the dataset to a int vector"""
         self.attribute_columns = list(self.DataFrame.columns)
         self.attribute_columns.remove(self._surv_col_name)
-        self.attribute_columns.remove(self._event_col_name)
+        self.attribute_columns.remove(self._status_col_name)
 
         mapped_int = 0
 
@@ -57,55 +56,9 @@ class Dataset:
                 self.indexed_keys.append(item_reference)
                 mapped_int += 1
 
-    def deprecated_make_transaction_bit_array(self, verbose=False):
-        """Make binary representation of a dataset row's attribute values"""
-        skip = 'placeholder'
-        construction_iteration = 0
-
-        self.DataFrame['bArray'] = ''
-        sample_transaction = np.random.randint(0, 100)
-
-        for attribute, value in self.item_map:
-            construction_iteration += 1
-
-            self.DataFrame.loc[self.DataFrame[attribute]
-                               == value, 'bArray'] += '1'
-            self.DataFrame.loc[self.DataFrame[attribute]
-                               != value, 'bArray'] += '0'
-
-            if verbose and skip != 's':
-                lines_to_print = int(15)
-                print(lines_to_print*'\n')
-                print(
-                    10*'*' + f' Iteration {construction_iteration} ' + 10*'*')
-                print()
-                print("Setting bit if {} == {}".format(attribute, value))
-                print()
-                print(10*'*' + ' Value Count ' + 10*'*')
-                print()
-                print(self.DataFrame[attribute].value_counts())
-                print()
-                print(10*'*' + ' Sample Row ' + 10*'*')
-                print()
-                print(self.DataFrame.iloc[sample_transaction])
-                print()
-                print(int(lines_to_print / 2) * '\n')
-                skip = input(
-                    "Enter 's' to stop printing this dataset transactions array construction..."
-                )
-
-        self.DataFrame['bArray'] = self.DataFrame['bArray'].apply(
-            lambda x: (list(map(int, x)))
-        )
-
-        self.binary_transactions = np.array(self.DataFrame['bArray'].tolist())
-        # self.binary_transactions = np.array(self.DataFrame['bArray'].values)
-        self.DataFrame = self.DataFrame.drop('bArray', axis=1)
-
-    def transaction_as_binary(self, transaction: pd.Series) -> None:
-        """Append representation of transaction as binary array
-        to binary_transactions list. Bits are set for the observed items
-        at indexes set by the original mapping.
+    def transaction_as_binary(self, transaction: pd.Series) -> np.array:
+        """Return transaction as binary array. 
+        Bits are set for the observed items at indexes set by the original mapping.
         """
         transaction_items_indexes = [
             self.item_map[(attribute, transaction[attribute])]
@@ -114,9 +67,7 @@ class Dataset:
 
         transaction_array = np.zeros(len(self.item_map), dtype=int)
         transaction_array.put(transaction_items_indexes, 1)
-        # self.binary_transactions.append(np.packbits(transaction_array))
         return np.packbits(transaction_array)
-        # self.binary_transactions.append(np.packbits(transaction_array))
 
     def make_transaction_array(self) -> None:
         """Construct binary matrix of transactions.
@@ -125,13 +76,10 @@ class Dataset:
         a = self.DataFrame.apply(
             self.transaction_as_binary, axis=1
         )
-        print(type(a.values))
-        # self.binary_transactions = np.array(self.binary_transactions)
         self.binary_transactions = np.stack(a.values, axis=0)
 
-    # def get_indexes_of_transactions_covered_by_item(self, item: tuple) -> np.array:
     def get_transactions(self, item: tuple) -> np.array:
-        """Just to show that it works."""
+        """Return all transactions having the item."""
 
         item_idx = self.item_map[item]
 
@@ -140,13 +88,16 @@ class Dataset:
         binary_mask = np.packbits(binary_mask)
 
         covered_transactions = np.bitwise_and(
-            binary_mask, ds.binary_transactions)
+            binary_mask, ds.binary_transactions
+        )
+
         return np.nonzero(covered_transactions)[0]
 
-    # def get_items_covered_by_transactions(self, transactions: np.array) -> np.array:
     def get_items(self, transactions: np.array) -> np.array:
         """Get set of items covered by a set of transactions."""
-        return np.nonzero(np.unpackbits(np.bitwise_or.reduce(self.binary_transactions[transactions])))[0]
+        return np.nonzero(np.unpackbits(
+            np.bitwise_or.reduce(self.binary_transactions[transactions])
+        ))[0]
 
 
 if __name__ == "__main__":
@@ -163,17 +114,17 @@ if __name__ == "__main__":
 
     print(ds.status)
 
-    # with open('simple_log.txt', 'a') as file:
-    #     for item in ds.item_map:
-    #         file.write(
-    #             'Item {} covers {} transactions.\n'.format(
-    #                 item, len(
-    #                     ds.get_indexes_of_transactions_covered_by_item(item))
-    #             )
-    #         )
+    with open('simple_log.txt', 'a') as file:
+        for item in ds.item_map:
+            file.write(
+                'Item {} covers {} transactions.\n'.format(
+                    item, len(
+                        ds.get_transactions(item))
+                )
+            )
 
-    # with open('fancy_log.txt', 'a') as file:
-    #     for item in ds.item_map:
-    #         file.write(
-    #             str(ds.get_indexes_of_transactions_covered_by_item(item))
-    #         )
+    with open('fancy_log.txt', 'a') as file:
+        for item in ds.item_map:
+            file.write(
+                str(ds.get_transactions(item))
+            )
