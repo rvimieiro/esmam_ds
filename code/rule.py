@@ -8,6 +8,7 @@ from utils import NoIndent
 class Rule:
 
     def __init__(self, dataset, comp):
+        
         self.antecedent = {}
         self.sub_group_cases = dataset.get_instances()
         self.no_covered_cases = len(self.sub_group_cases)
