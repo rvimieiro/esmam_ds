@@ -6,8 +6,10 @@ b = np.zeros(10, dtype=int)
 a.put(2, 1)
 a.put(3, 1)
 
-b.put(3, 1)
-b.put(4, 1)
+# b.put(3, 1)
+# b.put(4, 1)
+
+b.put(list(set([3, 4, 8])), 1)
 
 print(a)
 print(b)

@@ -1,4 +1,5 @@
 from numpy.core.fromnumeric import shape
+from numpy.core.numeric import binary_repr
 import pandas as pd
 import numpy as np
 import json as json
@@ -93,64 +94,17 @@ class Dataset:
 
         return np.nonzero(covered_transactions)[0]
 
-    def get_transactions_by_mask(self, mask: np.array) -> np.array:
-        """Not functional.
-        I would like to make an 'abstract' bit-array-wise-and with an array
-        and the transactions array. I would like to get every transaction which
-        contains these three items in conjunction."""
-
+    def get_transactions(self, items: set()) -> np.array:
+        mask = np.zeros(len(self.item_map), dtype=int)
+        mask.put(list(items), 1)
         binary_mask = np.packbits(mask)
-        print(binary_mask)
         covered_transactions = np.bitwise_and(
             binary_mask, self.binary_transactions
         )
-        # print(np.nonzero(covered_transactions)[0])
-
-        return np.nonzero(np.apply_along_axis(lambda x: np.all(
-            np.equal(x, binary_mask)),
-            1, covered_transactions))[0]
-
-        np.apply_along_axis(lambda x: np.all(
-            np.equal(x, binary_mask)), 1, covered_transactions)
-
-    def get_transactions_by_items(self, items: list) -> np.array:
-        """Does what I would like to do in 'get_transactions_by_mask
-        in a Gambiarra fashion.
-        Given a list of items, return every transaction containing these items
-        in conjunction."""
-        item_idxs = [self.item_map[item] for item in items]
-
-        transactions_sets = []
-        # for each item, store a set of its covered transactions
-
-        covered_transactions_by_item_idxs = None
-        for item_idx in item_idxs:
-
-            binary_mask = np.zeros(len(self.item_map), dtype=int)
-            binary_mask.put(item_idx, 1)
-            binary_mask = np.packbits(binary_mask)
-
-            covered_transactions_by_item_idxs = np.bitwise_and(
-                binary_mask, self.binary_transactions
-            )
-
-            covered_transactions_by_item_idxs = np.nonzero(
-                covered_transactions_by_item_idxs
-            )[0]
-
-            this_set_of_transactions = set()
-            this_set_of_transactions.update(covered_transactions_by_item_idxs)
-
-            transactions_sets.append(this_set_of_transactions)
-
-        resulting_set = set()
-        resulting_set.update(transactions_sets.pop())
-
-        # passar intersecao para dentro do laco
-        for idx_set in transactions_sets:
-            resulting_set = resulting_set.intersection(idx_set)
-
-        return resulting_set
+        return np.nonzero(
+            np.apply_along_axis(lambda x: np.all(np.equal(x, binary_mask)),
+                                1, covered_transactions)
+        )[0]
 
     def get_items(self, transactions: np.array) -> np.array:
         """Get set of items covered by a set of transactions."""
@@ -165,41 +119,9 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
-    mask = np.zeros(len(ds.item_map), dtype=int)
-    mask[0] = 1
-    print(ds.indexed_keys[5])
-    # mask[20] = 1
-    print(ds.get_transactions_by_mask(mask))
-    print(ds.DataFrame.query(
-            # "tx == '0' and karnof == '90' and age == '[32.00,35.00)'"
-            "tx == '0'"
-        ))
-    # print('\nActg320 dataset original shape (with survival data):', ds.DataFrame.shape)
-    # print('Total number of items:', len(ds.item_map))
-    # print('Binary data shape:', ds.binary_transactions.shape, '\n')
-    # print('Binary transactions:\n')
-    # print(ds.binary_transactions, '\n')
 
-    # print(ds.status)
-
-    # with open('simple_log.txt', 'a') as file:
-    #     for item in ds.item_map:
-    #         file.write(
-    #             'Item {} covers {} transactions.\n'.format(
-    #                 item, len(
-    #                     ds.get_transactions_by_item(item))
-    #             )
-    #         )
-
-    # with open('fancy_log.txt', 'a') as file:
-    #     for item in ds.item_map:
-    #         file.write(
-    #             str(ds.get_transactions_by_item(item))
-    #         )
-
-    with open('item_query.txt', 'w') as file:
-        query = ds.DataFrame.query(
-            # "tx == '0' and karnof == '90' and age == '[32.00,35.00)'"
-            "txgrp == '3'"
-        )
-        file.write(str(query))
+    # print(ds.item_map)
+    items = set([0])
+    print(len(ds.get_transactions(items)))
+    # print(ds.DataFrame.iloc[1])
+    print(ds.DataFrame.query("tx == '0'"))

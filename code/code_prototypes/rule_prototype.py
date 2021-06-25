@@ -10,20 +10,14 @@ class Baseline(Enum):
 
 
 class Rule:
-    """
-    funcionalidades:
-    3. calcular a qualidade
-    """
 
     def __init__(self, Dataset, Baseline):
 
-        # melhor deixar somente como List
         self.antecedent: set = set()
         self.cover = None
         self.baseline = Baseline
         self.Dataset = Dataset  # referencia, correto?
         self.quality = 0.0
-
 
     def get_antecedent(self) -> set:
         return self.antecedent
@@ -34,24 +28,21 @@ class Rule:
     def remove_item_from_antecedent(self, item: tuple) -> None:
         self.antecedent.remove(item)
 
+    def set_cover(self):
+        self.cover = self.Dataset.get_transactions(self.antecedent)
+
     def get_cover(self):
-        return self.Dataset.get_transactions_by_items(self.antecedent_items)
+        return self.cover
 
     def get_cover_size(self):
-        return len(self.Dataset.get_transactions_by_items(self.antecedent_items))
+        return len(self.cover)
 
     def __repr__(self):
         formatted = str(self.antecedent)
-        formatted = str(self.antecedent_items)
-        formatted += '\n'
-        formatted += str(self.baseline)
         return formatted
 
     def __str__(self):
         formatted = str(self.antecedent)
-        formatted = str(self.antecedent_items)
-        formatted += '\n'
-        formatted += str(self.baseline)
         return formatted
 
 
@@ -59,18 +50,16 @@ if __name__ == "__main__":
     # Criando dataset
     path = '/home/pedro/code/esmam/esmam_algorithm/esmam_ds/code/datasets/actg320_disc.xz'
     ds = Dataset(path, "survival_time", "survival_status")
-    ds.save_dataframe()
+    ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
 
     # Criando uma regra
     regra = Rule(ds, Baseline.POPULATION)
-    regra.add_item_to_antecedent(('tx', '0'))
-    regra.add_item_to_antecedent(('karnof', '90'))
-    regra.add_item_to_antecedent(('age', '[32.00,35.00)'))
+    regra.add_item_to_antecedent(ds.item_map[('tx', '0')])
+    regra.add_item_to_antecedent(ds.item_map[(('karnof', '90'))])
+    regra.add_item_to_antecedent(ds.item_map[('age', '[32.00,35.00)')])
+    regra.set_cover()
 
-    ds.get_transactions_by_mask(regra.antecedent)
-
-    # print(regra)
-    # print(regra.get_cover())
-    # print(regra.get_cover_size())
+    print(regra)
+    print(regra.get_cover())
