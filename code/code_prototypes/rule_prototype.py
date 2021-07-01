@@ -15,9 +15,9 @@ class Rule:
 
         self.antecedent: set = set()
         self.cover = None
-        self.baseline = Baseline
-        self.Dataset = Dataset  # referencia, correto?
-        self.quality = 0.0
+        self.baseline: Baseline = Baseline
+        self.Dataset: Dataset = Dataset
+        self.quality: int = None
 
     def get_antecedent(self) -> set:
         return self.antecedent

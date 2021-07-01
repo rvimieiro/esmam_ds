@@ -1,4 +1,0 @@
-      survival_time  survival_status tx txgrp  ... karnof            cd4         priorzdv            age
-1091             47            False  0     3  ...     90  [17.00,50.00)  [52.00,5175.00]  [35.00,40.00)
-
-[1 rows x 13 columns]

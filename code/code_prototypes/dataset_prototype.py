@@ -1,5 +1,4 @@
 from numpy.core.fromnumeric import shape
-from numpy.core.numeric import binary_repr
 import pandas as pd
 import numpy as np
 import json as json
@@ -20,13 +19,6 @@ class Dataset:
         self._status_col_name = attr_event_name
         self.attribute_columns = None
 
-    def load_dataframe(self) -> None:
-        """Read data from data_path and store it into a pandas DataFrame.
-        Every value in the dataset is converted to string type."""
-        with open(self.data_path.split('.')[0] + '_dtypes.json', 'r') as f:
-            dtypes = json.load(f)
-        self.DataFrame = pd.read_csv(self.data_path, dtype=dtypes)
-
     @property
     def survival(self) -> np.array:
         return self.DataFrame[self._surv_col_name].values
@@ -34,6 +26,13 @@ class Dataset:
     @property
     def status(self) -> np.array:
         return self.DataFrame[self._status_col_name].values
+
+    def load_dataframe(self) -> None:
+        """Read data from data_path and store it into a pandas DataFrame.
+        Every value in the dataset is converted to string type."""
+        with open(self.data_path.split('.')[0] + '_dtypes.json', 'r') as f:
+            dtypes = json.load(f)
+        self.DataFrame = pd.read_csv(self.data_path, dtype=dtypes)
 
     def map_items(self) -> None:
         """Map unique items from the dataset to a int vector"""
