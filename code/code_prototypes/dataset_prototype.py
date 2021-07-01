@@ -1,4 +1,3 @@
-from numpy.core.fromnumeric import shape
 import pandas as pd
 import numpy as np
 import json as json
@@ -13,7 +12,7 @@ class Dataset:
         self.data_path = data_path
         self.DataFrame = None
         self.item_map = {}
-        self.indexed_keys = []
+        self.items_list = []
         self.binary_transactions = []
         self._surv_col_name = attr_survival_name
         self._status_col_name = attr_event_name
@@ -44,16 +43,17 @@ class Dataset:
 
         for attribute in self.attribute_columns:
             for value in self.DataFrame[attribute].unique():
-
                 item_reference = (attribute, value)
                 self.item_map[item_reference] = mapped_int
-                self.indexed_keys.append(item_reference)
+                self.items_list.append(item_reference)
                 mapped_int += 1
 
     def get_item_index(self, item):
+        """Return the mapped value for a item."""
         return self.item_map[item]
 
-    def get_number_of_items(self):
+    def get_map_size(self):
+        """Return number of items in the items' map."""
         return len(self.item_map)
 
     def transaction_as_binary(self, transaction: pd.Series) -> np.array:
@@ -64,7 +64,6 @@ class Dataset:
             self.item_map[(attribute, transaction[attribute])]
             for attribute in self.attribute_columns
         ]
-
         transaction_array = np.zeros(len(self.item_map), dtype=int)
         transaction_array.put(transaction_items_indexes, 1)
         return np.packbits(transaction_array)
@@ -78,31 +77,21 @@ class Dataset:
         )
         self.binary_transactions = np.stack(a.values, axis=0)
 
-    def get_transactions_by_item(self, item: tuple) -> np.array:
-        """Return all transactions having the item."""
-
-        item_idx = self.item_map[item]
-
-        binary_mask = np.zeros(len(self.item_map), dtype=int)
-        binary_mask.put(item_idx, 1)
-        binary_mask = np.packbits(binary_mask)
-
-        covered_transactions = np.bitwise_and(
-            binary_mask, self.binary_transactions
-        )
-
-        return np.nonzero(covered_transactions)[0]
-
     def get_transactions(self, items: set()) -> np.array:
+        """Return all transactions covered by a set of items."""
         mask = np.zeros(len(self.item_map), dtype=int)
         mask.put(list(items), 1)
+
         binary_mask = np.packbits(mask)
         covered_transactions = np.bitwise_and(
             binary_mask, self.binary_transactions
         )
+
         return np.nonzero(
-            np.apply_along_axis(lambda x: np.all(np.equal(x, binary_mask)),
-                                1, covered_transactions)
+            np.apply_along_axis(
+                lambda x: np.all(np.equal(x, binary_mask)), 1,
+                covered_transactions
+            )
         )[0]
 
     def get_items(self, transactions: np.array) -> np.array:
@@ -118,9 +107,3 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
-
-    # print(ds.item_map)
-    items = set([0])
-    print(len(ds.get_transactions(items)))
-    # print(ds.DataFrame.iloc[1])
-    print(ds.DataFrame.query("tx == '0'"))
