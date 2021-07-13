@@ -16,7 +16,7 @@ class Rule:
     def __init__(self, Dataset, Baseline):
 
         self._antecedent: set = set()
-        self._cover = None # Poderia ser propriedade?
+        self._cover = None  # Poderia ser propriedade?
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
         self.quality: float = None
@@ -36,9 +36,32 @@ class Rule:
         """Add item to antecedent. The item is referred by its integer index in
         the Dataset's class item_map.
         """
+        # def __iadd__(self, elem):
+        #     if isinstance(elem, Feature):
+        #         self.feat.update([elem])
+        #     elif isinstance(elem, Rule):
+        #         assert(self.target==elem.target)
+        #         self.feat.update(elem.feat)
+        #     else:
+        #         raise ValueError("Invalid type of param elem: {}\n Should either be Feature or Rule.".format(type(elem)))
+        #     return self
+
+        # def __add__(self, elem):
+        #     r = Rule(self.feat.copy(),self.target)
+        #     if isinstance(elem, Feature):
+        #         r.feat.update([elem])
+        #     elif isinstance(elem, Rule):
+        #         assert(self.target==elem.target)
+        #         r.feat.update(elem.feat)
+        #     else:
+        #         raise ValueError("Invalid type of param elem: {}\n Should either be Feature or Rule.".format(type(elem)))
+            
+        #     return r
+
         self._antecedent.add(item)
 
     def remove_item(self, item: tuple) -> None:
+        # __remove?__
         """Remove item of the antecedent. The item is referred by its
         integer-valued index in the Dataset's class item_map.
         """
@@ -59,23 +82,14 @@ class Rule:
 
     def __repr__(self):
         """Pretty-prints the rule."""
-        str_repr = 10*'-' + ' rule ' + 10*'-'
-        str_repr += '\n'
-        idx = 0
-        for item in self.antecedent:
-            str_repr += f"${idx}: " + str(self.Dataset.items_list[item])
-            str_repr += ", key: " + str(item) + "\n"
-            idx += 1
-        str_repr += 26*'-' + '\n'
-        return str_repr
+        return " \u2227 ".join(map(lambda x: "{} = {}".format(
+            *self.Dataset.items_list[x]), self.antecedent)
+        ) + " \u2192 " + str(self.quality)
 
 
 if __name__ == "__main__":
-    # Criando dataset
-    current_dir = os.getcwd()
-    slice_index = current_dir.find('code_prototypes')
-    path = current_dir[:slice_index] + 'datasets/actg320_disc.xz'
 
+    path = 'datasets/actg320_disc.xz'
     ds = Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
@@ -89,4 +103,3 @@ if __name__ == "__main__":
     regra.set_cover()
 
     print(regra)
-    print(regra.get_cover())
