@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import json as json
+import os
 
 
 class Dataset:
@@ -102,8 +103,10 @@ class Dataset:
 
 
 if __name__ == "__main__":
-    path = '/home/pedro/code/esmam/esmam_algorithm/esmam_ds/code/datasets/actg320_disc.xz'
+    pwd = os.getcwd()
+    path = pwd + '/datasets/actg320_disc.xz'
     ds = Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
+    print('okey-dokey.')

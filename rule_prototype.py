@@ -36,32 +36,9 @@ class Rule:
         """Add item to antecedent. The item is referred by its integer index in
         the Dataset's class item_map.
         """
-        # def __iadd__(self, elem):
-        #     if isinstance(elem, Feature):
-        #         self.feat.update([elem])
-        #     elif isinstance(elem, Rule):
-        #         assert(self.target==elem.target)
-        #         self.feat.update(elem.feat)
-        #     else:
-        #         raise ValueError("Invalid type of param elem: {}\n Should either be Feature or Rule.".format(type(elem)))
-        #     return self
-
-        # def __add__(self, elem):
-        #     r = Rule(self.feat.copy(),self.target)
-        #     if isinstance(elem, Feature):
-        #         r.feat.update([elem])
-        #     elif isinstance(elem, Rule):
-        #         assert(self.target==elem.target)
-        #         r.feat.update(elem.feat)
-        #     else:
-        #         raise ValueError("Invalid type of param elem: {}\n Should either be Feature or Rule.".format(type(elem)))
-            
-        #     return r
-
         self._antecedent.add(item)
 
     def remove_item(self, item: tuple) -> None:
-        # __remove?__
         """Remove item of the antecedent. The item is referred by its
         integer-valued index in the Dataset's class item_map.
         """
@@ -89,7 +66,9 @@ class Rule:
 
 if __name__ == "__main__":
 
-    path = 'datasets/actg320_disc.xz'
+    pwd = os.getcwd()
+    path = pwd + '/datasets/actg320_disc.xz'
+
     ds = Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
