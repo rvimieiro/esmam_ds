@@ -1,6 +1,9 @@
 from enum import Enum
+
+from numpy.lib.function_base import cov
 from dataset import Dataset
 import statsmodels.api as sm
+import numpy as np
 import os
 
 
@@ -11,13 +14,14 @@ class Baseline(Enum):
 
 class Rule:
     """Implement a rule. A rule is composed of an antecedent. This antecedent
-    covers a subgroup and a this subgroup has an associated cover_survival function.
+    covers a subgroup and a this subgroup has an associated cover_survival
+    function.
     """
 
     def __init__(self, Dataset, Baseline):
 
         self._antecedent: set = set()
-        self._cover = None  # Poderia ser propriedade?
+        self._cover = None
         self.quality: float = None
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
@@ -29,8 +33,6 @@ class Rule:
 
     @antecedent.setter
     def antecedent(self, new_antecedent: set):
-        """Aqui eu poderia colocar a funcionalidade de acionar um item
-        ao antecedente ou deveria ser substituicao total do antecedente?"""
         self._antecedent = new_antecedent
 
     def add_item(self, item: int) -> None:
@@ -46,8 +48,9 @@ class Rule:
         self._antecedent.remove(item)
 
     def set_cover(self):
-        """Set the rule cover. A rule's cover is defined as the set of transactions
-        where each transaction contain, at least, every item of the antecedent."""
+        """Set the rule cover. A rule's cover is defined as the set of
+        transactions where each transaction contain, at least,
+        every item of the antecedent."""
         self.cover = self.Dataset.get_transactions(self.antecedent)
 
     def get_cover(self):
@@ -58,29 +61,52 @@ class Rule:
         """Return the size of a Rule's cover."""
         return len(self.cover)
 
+    def population_quality(self):
+        """Calculate rule's quality based on population comparison."""
+        population_identifier = np.zeros(shape=len(self.Dataset.DataFrame))
+
+        subgroup_identifier = np.ones(shape=len(self.get_cover()))
+
+        group = np.concatenate((population_identifier,
+                                subgroup_identifier))
+
+        subgroup_times = self.Dataset.survival[self.get_cover()]
+        subgroup_status = self.Dataset.status[self.get_cover()]
+
+        time = np.concatenate((self.Dataset.survival, subgroup_times))
+        status = np.concatenate((self.Dataset.status, subgroup_status))
+
+        _, pvalue = sm.duration.survdiff(time, status, group)
+        return 1 - pvalue
+
+    def complement_quality(self):
+        """Calculate rule's quality based on complement comparison."""
+        group = np.zeros(shape=len(self.Dataset.DataFrame))
+        np.put(group, self.get_cover(), 1)
+
+        time = self.Dataset.survival
+        status = self.Dataset.status
+        _, pvalue = sm.duration.survdiff(time, status, group)
+        return 1 - pvalue
+
     def calculate_quality(self):
         """Calculate the Rule's quality according to Logrank test."""
+        # Discussao:
+        # 1. E se a cobertura eh vazia, onde isso deve ser testado?
+        #    Por enquanto coloquei qualidade = 0 se cobertura vazia.
+        # 2. Quais possiveis testes podemos fazer?
+        # 3. Etapas cruciais que devem ser verificadas ao longo do caminho
+        #    ateh aqui.
+
         self.set_cover()
-        cover = self.get_cover()
-
-        cover_survival = self.Dataset.survival
-        cover_survival = cover_survival[cover]
-
-        cover_status = self.Dataset.status
-        cover_status = cover_status[cover]
-
-        if self.baseline == Baseline.POPULATION:
-            pass
+        if len(self.cover) == 0:
+            self.quality = 0
         else:
-            pass
-
-        print('\nCover\n')
-        print(cover)
-        print('\nSurvival\n')
-        print(cover_survival)
-        print('\nStatus\n')
-        print(cover_status)
-        pass
+            if self.baseline == Baseline.COMPLEMENT:
+                self.quality = self.complement_quality()
+            else:
+                self.quality = self.population_quality()
+        return
 
     def __repr__(self):
         """Pretty-prints the rule."""
@@ -99,12 +125,8 @@ if __name__ == "__main__":
     ds.map_items()
     ds.make_transaction_array()
 
-    # Criando uma regra
-    regra = Rule(ds, Baseline.POPULATION)
-    regra.add_item(ds.item_map[('tx', '0')])
-    regra.add_item(ds.item_map[(('karnof', '90'))])
-    regra.add_item(ds.item_map[('age', '[32.00,35.00)')])
-
-    print(regra)
-
-    regra.calculate_quality()
+    rule = Rule(ds, Baseline.COMPLEMENT)
+    for i in [1, 6, 16, 28, 38]:
+        rule.add_item(i)
+        rule.calculate_quality()
+        print(rule)
