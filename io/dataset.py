@@ -27,6 +27,10 @@ class Dataset:
     def status(self) -> np.array:
         return self.DataFrame[self._status_col_name].values
 
+    @property
+    def size(self) -> int:
+        return len(self.DataFrame)
+
     def load_dataframe(self) -> None:
         """Read data from data_path and store it into a pandas DataFrame.
         Every value in the dataset is converted to string type."""

@@ -50,15 +50,15 @@ class Rule:
         """Set the rule cover. A rule's cover is defined as the set of
         transactions where each transaction contain, at least,
         every item of the antecedent."""
-        self.cover = self.Dataset.get_transactions(self.antecedent)
+        self._cover = self.Dataset.get_transactions(self.antecedent)
 
     def get_cover(self):
         """Return Rule's cover."""
-        return self.cover
+        return self._cover
 
     def get_cover_size(self) -> int:
         """Return the size of a Rule's cover."""
-        return len(self.cover)
+        return len(self._cover)
 
     def __population_quality(self) -> float:
         """Calculate rule's quality based on population comparison."""
@@ -91,7 +91,7 @@ class Rule:
     def quality(self) -> float:
         """Calculate the Rule's quality according to Logrank test."""
         self.set_cover()
-        if len(self.cover) == 0:
+        if len(self._cover) == 0:
             return 0
         else:
             if self.baseline == Baseline.COMPLEMENT:
@@ -117,8 +117,7 @@ if __name__ == "__main__":
     ds.make_transaction_array()
 
     rule = Rule(ds, Baseline.COMPLEMENT)
-    # for i in [1, 6, 16, 28, 38]:
-    # rule.add_item(i)
-    # print(rule)
     rule.add_item(6)
+    rule.set_cover()
+    print(rule.get_cover())
     print(rule)
