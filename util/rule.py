@@ -1,12 +1,9 @@
-from data.dataset import Dataset
-from enum import Enum
-
-from numpy.lib.function_base import cov
-from data import baseline, dataset
-import statsmodels.api as sm
-import numpy as np
 import os
 
+import numpy as np
+import statsmodels.api as sm
+import baseline
+import dataset
 
 class Rule:
     """Implement a rule. A rule is composed of an antecedent. This antecedent
@@ -28,6 +25,12 @@ class Rule:
     @antecedent.setter
     def antecedent(self, new_antecedent: set):
         self._antecedent = new_antecedent
+    
+    def __eq__(self, o: object) -> bool:
+        if not isinstance(o, Rule):
+            return NotImplemented
+        return self._antecedent == o._antecedent
+        
 
     def add_item(self, item: int) -> None:
         """Add item to antecedent. The item is referred by its integer index
@@ -40,7 +43,6 @@ class Rule:
         integer-valued index in the Dataset's class item_map.
         """
         self._antecedent.remove(item)
-        # recalcular qualidade
 
     def set_cover(self) -> None:
         """Set the rule cover. A rule's cover is defined as the set of
@@ -90,7 +92,7 @@ class Rule:
         if len(self._cover) == 0:
             return 0
         else:
-            if self.baseline == Baseline.COMPLEMENT:
+            if self.baseline == baseline.Baseline.COMPLEMENT:
                 return self.__complement_quality()
             else:
                 return self.__population_quality()
@@ -107,13 +109,18 @@ if __name__ == "__main__":
     pwd = os.getcwd()
     path = pwd + '/datasets/breast-cancer_disc.xz'
 
-    ds = Dataset(path, "survival_time", "survival_status")
+    ds = dataset.Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
 
-    rule = Rule(ds, Baseline.COMPLEMENT)
+    rule = Rule(ds, baseline.Baseline.COMPLEMENT)
     rule.add_item(6)
+
+    another_rule = Rule(ds, baseline.Baseline.COMPLEMENT)
+    another_rule.add_item(6)
+
     rule.set_cover()
-    print(rule.get_cover())
-    print(rule)
+    another_rule.set_cover()
+
+    print(rule != another_rule)

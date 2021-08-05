@@ -2,8 +2,8 @@ import os
 import numpy as np
 
 from algorithm import Algorithm
-from data import dataset
-from data import baseline
+from util import dataset
+from util import baseline
 from util import rule
 
 
@@ -21,13 +21,14 @@ class Esmam(Algorithm):
         self.__heuristic: np.array = None
 
     def run(self) -> None:
+        """Execute ESMAM Algorithm."""
         uncovered_cases = set(self._dataset.DataFrame.index.values)
         it = 0
         heuristic, pheromone = self._searchInitialisation()
         while len(uncovered_cases) > self.__max_uncovered_cases or it < self.__n_ants:
             rule = self._subgroupSearch(heuristic, pheromone)
             if rule.quality >= (1 - self._alpha):
-                self._rule_set = self._subgroupUpdate(rule)
+                self.rules = self._subgroupUpdate(rule)
                 uncovered_cases -= rule.cover
             else:
                 break
@@ -35,6 +36,7 @@ class Esmam(Algorithm):
         return
 
     def _searchInitialisation(self):
+        """Initialize pheromone and heuristic vectors."""
         n_items = self._dataset.get_number_of_items()
         self.pheromone = np.ones(n_items) / n_items
         # heuristic = ??????

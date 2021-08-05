@@ -1,15 +1,17 @@
-from data import dataset
-from data import baseline
+from util import dataset
+from util import baseline
 from abc import ABC, abstractmethod
+
 
 class Algorithm(ABC):
     """Abstract class for ESMAM/ESMAMDS"""
 
-    def __init__(self, dataset, baseline, alpha) -> None:
+    def __init__(self, dataset: dataset.Dataset,
+                 baseline: baseline.Baseline, alpha: float) -> None:
         self._dataset: dataset.Dataset = dataset
         self._baseline: baseline.Baseline = baseline
         self._alpha: float = alpha
-        self._rule_set: list = []
+        self._rules: list = []
 
     @abstractmethod
     def _searchInitialisation(self):
@@ -33,4 +35,4 @@ class Algorithm(ABC):
         pass
 
     def results(self) -> set():
-        return self.rule_set
+        return self.rules
