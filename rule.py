@@ -1,9 +1,9 @@
 import os
-
 import numpy as np
+from enum import Enum
 import statsmodels.api as sm
-import baseline
 import dataset
+
 
 class Rule:
     """Implement a rule. A rule is composed of an antecedent. This antecedent
@@ -92,7 +92,7 @@ class Rule:
         if len(self._cover) == 0:
             return 0
         else:
-            if self.baseline == baseline.Baseline.COMPLEMENT:
+            if self.baseline == Baseline.COMPLEMENT:
                 return self.__complement_quality()
             else:
                 return self.__population_quality()
@@ -114,10 +114,10 @@ if __name__ == "__main__":
     ds.map_items()
     ds.make_transaction_array()
 
-    rule = Rule(ds, baseline.Baseline.COMPLEMENT)
+    rule = Rule(ds, Baseline.COMPLEMENT)
     rule.add_item(6)
 
-    another_rule = Rule(ds, baseline.Baseline.COMPLEMENT)
+    another_rule = Rule(ds, Baseline.COMPLEMENT)
     another_rule.add_item(6)
 
     rule.set_cover()

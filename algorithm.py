@@ -1,13 +1,18 @@
-from util import dataset
-from util import baseline
+import dataset
 from abc import ABC, abstractmethod
+from enum import Enum
+
+
+class Baseline(Enum):
+    POPULATION = 1
+    COMPLEMENT = 2
 
 
 class Algorithm(ABC):
     """Abstract class for ESMAM/ESMAMDS"""
 
     def __init__(self, dataset: dataset.Dataset,
-                 baseline: baseline.Baseline, alpha: float) -> None:
+                 baseline: Baseline, alpha: float) -> None:
         self._dataset: dataset.Dataset = dataset
         self._baseline: baseline.Baseline = baseline
         self._alpha: float = alpha

@@ -115,4 +115,4 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
-    print('okey-dokey.')
+    print(ds.get_transactions({3}))
