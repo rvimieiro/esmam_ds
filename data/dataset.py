@@ -37,6 +37,7 @@ class Dataset:
         with open(self.data_path.split('.')[0] + '_dtypes.json', 'r') as f:
             dtypes = json.load(f)
         self.DataFrame = pd.read_csv(self.data_path, dtype=dtypes)
+        self.map_items()
 
     def map_items(self) -> None:
         """Map unique items from the dataset to a int vector"""
@@ -57,7 +58,7 @@ class Dataset:
         """Return the mapped value for a item."""
         return self.item_map[item]
 
-    def get_map_size(self):
+    def get_number_of_items(self):
         """Return number of items in the items' map."""
         return len(self.item_map)
 

@@ -1,13 +1,13 @@
-from dataset import Dataset
-from rule import Baseline
+from data import dataset
+from data import baseline
 from abc import ABC, abstractmethod
 
 class Algorithm(ABC):
     """Abstract class for ESMAM/ESMAMDS"""
 
     def __init__(self, dataset, baseline, alpha) -> None:
-        self._dataset: Dataset = dataset
-        self._baseline: Baseline = baseline
+        self._dataset: dataset.Dataset = dataset
+        self._baseline: baseline.Baseline = baseline
         self._alpha: float = alpha
         self._rule_set: list = []
 
@@ -32,6 +32,5 @@ class Algorithm(ABC):
     def run(self) -> None:
         pass
 
-    @abstractmethod
     def results(self) -> set():
         return self.rule_set

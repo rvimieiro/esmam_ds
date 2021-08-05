@@ -1,15 +1,11 @@
+from data.dataset import Dataset
 from enum import Enum
 
 from numpy.lib.function_base import cov
-from dataset import Dataset
+from data import baseline, dataset
 import statsmodels.api as sm
 import numpy as np
 import os
-
-
-class Baseline(Enum):
-    POPULATION = 1
-    COMPLEMENT = 2
 
 
 class Rule:
