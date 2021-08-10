@@ -24,15 +24,10 @@ class Algorithm(ABC):
 
     @abstractmethod
     def _subgroupSearch(self):
-        """execute a colony of ants"""
         pass
 
     @abstractmethod
-    def _subgroupUpdate(self) -> None:
-        pass
-
-    @abstractmethod
-    def _updateUncoveredCases(self) -> None:
+    def _subgroupSetUpdate(self, new_rule) -> bool:
         pass
 
     @abstractmethod
@@ -40,4 +35,4 @@ class Algorithm(ABC):
         pass
 
     def results(self) -> set():
-        return self.rules
+        return self._rules

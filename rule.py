@@ -12,7 +12,7 @@ class Rule:
     """
 
     def __init__(self, Dataset, Baseline):
-        self._cover = None
+        self._cover = len(self.Dataset.DataFrame)
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
@@ -37,12 +37,14 @@ class Rule:
         in the Dataset's class item_map.
         """
         self._antecedent.add(item)
+        self.set_cover()
 
     def remove_item(self, item: tuple) -> None:
         """Remove item of the antecedent. The item is referred by its
         integer-valued index in the Dataset's class item_map.
         """
         self._antecedent.remove(item)
+        self.set_cover()
 
     def set_cover(self) -> None:
         """Set the rule cover. A rule's cover is defined as the set of

@@ -31,24 +31,26 @@ class Esmam(Algorithm):
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
         # posso passar a inicializacao do uncov cases pro init?
-        self.__uncovered_cases = set(self._dataset.DataFrame.index.values)
+        self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
         self._searchInitialisation()
+        # passa a inicializacao do feromonio vai pra dentro
+        # a da entropia fica fora, roda uma vez somente,
+        # quebrar searchInit em dois
         while self.canCreateColony():
             new_rule = self._subgroupSearch()
             # essa estrutura aqui de baixo talvez seja polemica
-            if not self._subgroupUpdate(new_rule):
+            if not self._subgroupSetUpdate(new_rule):
                 break
         return
 
     def canCreateColony(self):
         """Return true if conditions for a new colony are satisfied."""
-        first_condition = len(
-            self.__uncovered_cases) > self.__max_uncovered_cases
-        second_condition = self.__currentColony < self.__n_ants
-        if first_condition or second_condition:
-            return True
-        else:
-            return False
+        # conversar sobre mudanca do criterio de parada
+        # implementar o delta U, que eh se mudou o numero de casos cobertos
+        # de uma colonia pra outra
+        # numero de iteracoes em que delta U eh zero chegando em stag, break
+        return len(self.__uncovered_cases) > self.__max_uncovered_cases or \
+            self.__currentColony < self.__n_ants
 
     def _searchInitialisation(self):
         """Initialize pheromone and heuristic vectors."""
@@ -62,25 +64,34 @@ class Esmam(Algorithm):
         for item in range(self._dataset.get_number_of_items()):
             items = set()
             items.add(item)
+            #####
             transactions = self._dataset.get_transactions(items)
+            # if number of transactions < min_cover_per_rule:
+            # then heuristic[item] = 0, continue
             number_of_transactions = len(transactions)
             transactions_below_avg = 0
             transactions_above_avg = 0
+            # vetorizar isso com numpy
+            ## np.sum(survival[transactions] < average_survival)
             for transaction in transactions:
                 if survival[transaction] < average_survival:
                     transactions_below_avg += 1
                 else:
                     transactions_above_avg += 1
+            # tudo vetorizado com numpy
             entropy = 0
             prob1 = transactions_above_avg / number_of_transactions
             prob2 = transactions_below_avg / number_of_transactions
             if prob1 != 0:
                 entropy -= prob1 * math.log2(prob1)
+                entropy -= prob1 * np.log2(prob1)
             if prob2 != 0:
                 entropy -= prob2 * math.log2(prob2)
+                entropy -= prob2 * np.log2(prob2)
+            # if p1 == 0, p1 <- 0
+            # if p2 == 0, p2 <- 0
             self.__heuristic[item] = 1 - entropy
         return
-
 
     def _subgroupSearch(self):
         """loop da colonia"""
@@ -101,22 +112,23 @@ class Esmam(Algorithm):
         # PheromoneUpdating()
         # return super()._subgroupSearch()
 
-    def _subgroupUpdate(self, new_rule) -> bool:
+    def _subgroupSetUpdate(self, new_rule) -> bool:
         """Update list of rules with or without the new rule.
-        If discovered rule cannot be added, break the colony of ants."""
-        can_add_rule = True
-        for rule in self._rules:
-            if rule == new_rule:
-                can_add_rule = False
-        if can_add_rule:
-            self._rules.append(new_rule)
-            self.__uncovered_cases -= new_rule.cover
+        If discovered rule cannot be added, break the colony of ants.
+        """
+        if new_rule.quality > 1 - self._alpha:
+            can_add_rule = True
+            for rule in self._rules:
+                if rule == new_rule:
+                    can_add_rule = False
+            if can_add_rule:
+                self._rules.append(new_rule)
+                self.__uncovered_cases -= new_rule.get_cover()
+                # passar isso para diferenca entre conjuntos usando setdiff
+                # vide docs
             return True
         else:
             return False
-
-    def _updateUncoveredCases(self) -> None:
-        return super()._updateUncoveredCases()
 
 
 if __name__ == "__main__":
