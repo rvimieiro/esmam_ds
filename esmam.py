@@ -23,19 +23,16 @@ class Esmam(Algorithm):
         self.__n_ants: int = n_ants
         self.__max_uncovered_cases: int = max_uncovered_cases
         self.__n_rules_converg: int = n_rules_converg
+        self.__deltaUncovered: int = 0
+        self.__currentColony: int = 0
         self.__pheromone: np.array = None
         self.__heuristic: np.array = None
-        self.__uncovered_cases: set = None
-        self.__currentColony: int = 0
+        self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
 
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
-        # posso passar a inicializacao do uncov cases pro init?
-        self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
         self._searchInitialisation()
-        # passa a inicializacao do feromonio vai pra dentro
-        # a da entropia fica fora, roda uma vez somente,
-        # quebrar searchInit em dois
+        return
         while self.canCreateColony():
             new_rule = self._subgroupSearch()
             # essa estrutura aqui de baixo talvez seja polemica
@@ -57,28 +54,26 @@ class Esmam(Algorithm):
         n_items = self._dataset.get_number_of_items()
         self.__pheromone = np.ones(n_items) / n_items
 
-        # Entropy related
         self.__heuristic = np.zeros(n_items)
         survival = self._dataset.survival
         average_survival = survival.mean()
         for item in range(self._dataset.get_number_of_items()):
             items = set()
             items.add(item)
-            #####
             transactions = self._dataset.get_transactions(items)
-            # if number of transactions < min_cover_per_rule:
-            # then heuristic[item] = 0, continue
+
+            ##$$@@$$@@$$##
+            # __min_cover_per_rule n esta implementado
+            # if len(transactions) < self.__min_cover_per_rule:
+            # self.__heuristic[item] = 0
+            # continue
+            ##$$@@$$@@$$##
+
             number_of_transactions = len(transactions)
-            transactions_below_avg = 0
-            transactions_above_avg = 0
-            # vetorizar isso com numpy
-            ## np.sum(survival[transactions] < average_survival)
-            for transaction in transactions:
-                if survival[transaction] < average_survival:
-                    transactions_below_avg += 1
-                else:
-                    transactions_above_avg += 1
-            # tudo vetorizado com numpy
+            transactions_below_avg = np.sum(
+                survival[transactions] < average_survival)
+            transactions_above_avg = np.sum(
+                survival[transactions] > average_survival)
             entropy = 0
             prob1 = transactions_above_avg / number_of_transactions
             prob2 = transactions_below_avg / number_of_transactions
@@ -88,8 +83,12 @@ class Esmam(Algorithm):
             if prob2 != 0:
                 entropy -= prob2 * math.log2(prob2)
                 entropy -= prob2 * np.log2(prob2)
+
+            #@@@@ O que eh isso aqui mesmo? @@@@@#
             # if p1 == 0, p1 <- 0
             # if p2 == 0, p2 <- 0
+            #@@@@ O que eh isso aqui mesmo? @@@@@#
+
             self.__heuristic[item] = 1 - entropy
         return
 
@@ -116,16 +115,15 @@ class Esmam(Algorithm):
         """Update list of rules with or without the new rule.
         If discovered rule cannot be added, break the colony of ants.
         """
-        if new_rule.quality > 1 - self._alpha:
+        if new_rule.quality() > 1 - self._alpha:
             can_add_rule = True
             for rule in self._rules:
                 if rule == new_rule:
                     can_add_rule = False
             if can_add_rule:
                 self._rules.append(new_rule)
-                self.__uncovered_cases -= new_rule.get_cover()
-                # passar isso para diferenca entre conjuntos usando setdiff
-                # vide docs
+                self.__uncovered_cases = np.setdiff1d(
+                    self.__uncovered_cases, new_rule.get_cover())
             return True
         else:
             return False
@@ -142,5 +140,8 @@ if __name__ == "__main__":
     ds.map_items()
     ds.make_transaction_array()
 
+    r = rule.Rule(ds, Baseline.COMPLEMENT)
+    r.add_item(1)
+
     e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10)
-    e._searchInitialisation()
+    e._subgroupSetUpdate(new_rule=r)

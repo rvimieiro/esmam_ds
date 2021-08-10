@@ -5,6 +5,11 @@ import statsmodels.api as sm
 import dataset
 
 
+class Baseline(Enum):
+    POPULATION = 1
+    COMPLEMENT = 2
+
+
 class Rule:
     """Implement a rule. A rule is composed of an antecedent. This antecedent
     covers a subgroup and a this subgroup has an associated cover_survival
@@ -12,10 +17,10 @@ class Rule:
     """
 
     def __init__(self, Dataset, Baseline):
-        self._cover = len(self.Dataset.DataFrame)
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
+        self._cover = self.Dataset.DataFrame.shape[0]
 
     @property
     def antecedent(self) -> set:
@@ -25,12 +30,11 @@ class Rule:
     @antecedent.setter
     def antecedent(self, new_antecedent: set):
         self._antecedent = new_antecedent
-    
+
     def __eq__(self, o: object) -> bool:
         if not isinstance(o, Rule):
             return NotImplemented
         return self._antecedent == o._antecedent
-        
 
     def add_item(self, item: int) -> None:
         """Add item to antecedent. The item is referred by its integer index

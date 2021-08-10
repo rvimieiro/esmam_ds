@@ -1,5 +1,5 @@
 {
-    "python.pythonPath": "/home/wei/Documents/code/r/esmam_ds/env/bin/python3",
+    "python.pythonPath": "/home/wei/Documents/code/r/esmam_ds/.env/bin/python3",
     "python.analysis.extraPaths": [
         "./util"
     ]
