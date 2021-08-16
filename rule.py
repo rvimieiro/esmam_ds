@@ -20,7 +20,9 @@ class Rule:
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
-        self._cover = self.Dataset.DataFrame.shape[0]
+        # isso aqui ta errado #
+        # precisa ser os indices, nao o tamanho #
+        self._cover = np.arange(self.Dataset.DataFrame.shape[0])
 
     @property
     def antecedent(self) -> set:

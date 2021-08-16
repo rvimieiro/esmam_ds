@@ -16,6 +16,7 @@ class Baseline(Enum):
 class Esmam(Algorithm):
     """Exceptional Survival Model Ant Miner"""
 
+    # atualizar a chamada do init com os parametros de entrada
     def __init__(self, dataset, baseline, alpha,
                  n_ants: int, max_uncovered_cases: int,
                  n_rules_converg: int) -> None:
@@ -27,13 +28,15 @@ class Esmam(Algorithm):
         self.__currentColony: int = 0
         self.__pheromone: np.array = None
         self.__heuristic: np.array = None
+        # porcentagem de cobertura de todo o dataset
+        self.__min_cover_per_rule: float = None 
         self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
 
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
-        self._searchInitialisation()
-        return
+        self._heuristicInitialisation()
         while self.canCreateColony():
+            self._pheromoneInitialisation()
             new_rule = self._subgroupSearch()
             # essa estrutura aqui de baixo talvez seja polemica
             if not self._subgroupSetUpdate(new_rule):
@@ -49,48 +52,50 @@ class Esmam(Algorithm):
         return len(self.__uncovered_cases) > self.__max_uncovered_cases or \
             self.__currentColony < self.__n_ants
 
-    def _searchInitialisation(self):
-        """Initialize pheromone and heuristic vectors."""
+    def _pheromoneInitialisation(self):
+        """Initialize pheromone vector."""
         n_items = self._dataset.get_number_of_items()
         self.__pheromone = np.ones(n_items) / n_items
+        return
 
+    def _heuristicInitialisation(self):
+        """Initialise the heuristic values vector."""
         self.__heuristic = np.zeros(n_items)
         survival = self._dataset.survival
         average_survival = survival.mean()
+        
+        #passar isso pra tudo pra map
         for item in range(self._dataset.get_number_of_items()):
             items = set()
             items.add(item)
             transactions = self._dataset.get_transactions(items)
 
-            ##$$@@$$@@$$##
-            # __min_cover_per_rule n esta implementado
-            # if len(transactions) < self.__min_cover_per_rule:
-            # self.__heuristic[item] = 0
-            # continue
-            ##$$@@$$@@$$##
+            # elif len(transactions) < self.__min_cover_per_rule:
+                # self.__heuristic[item] = 0
+
+            # else:
 
             number_of_transactions = len(transactions)
+            # checar se eh menor ou igual mesmo
             transactions_below_avg = np.sum(
                 survival[transactions] < average_survival)
+            # desnecessario, somente olhar a diferenca entre os conjuntos
             transactions_above_avg = np.sum(
-                survival[transactions] > average_survival)
+                survival[transactions] >= average_survival)
             entropy = 0
             prob1 = transactions_above_avg / number_of_transactions
             prob2 = transactions_below_avg / number_of_transactions
+            # checar se prob1 ou prob2 sao 0, porque log2(0) -> inf
+            # caso positivo, entropy = 0
             if prob1 != 0:
-                entropy -= prob1 * math.log2(prob1)
+                # entropy -= prob1 * math.log2(prob1)
                 entropy -= prob1 * np.log2(prob1)
             if prob2 != 0:
-                entropy -= prob2 * math.log2(prob2)
+                # entropy -= prob2 * math.log2(prob2)
                 entropy -= prob2 * np.log2(prob2)
-
-            #@@@@ O que eh isso aqui mesmo? @@@@@#
-            # if p1 == 0, p1 <- 0
-            # if p2 == 0, p2 <- 0
-            #@@@@ O que eh isso aqui mesmo? @@@@@#
-
             self.__heuristic[item] = 1 - entropy
         return
+
 
     def _subgroupSearch(self):
         """loop da colonia"""
@@ -122,8 +127,13 @@ class Esmam(Algorithm):
                     can_add_rule = False
             if can_add_rule:
                 self._rules.append(new_rule)
+                # atualizacao do delta uncovered
+                # verificar melhor aqui, passar essas etapas
+                # para fora da funcao _subgroupSetUpdate
+                # self.__deltaUncovered = len(self.__uncovered_cases)
                 self.__uncovered_cases = np.setdiff1d(
                     self.__uncovered_cases, new_rule.get_cover())
+                # self.__deltaUncovered -= len(self.__uncovered_cases)
             return True
         else:
             return False
@@ -141,7 +151,8 @@ if __name__ == "__main__":
     ds.make_transaction_array()
 
     r = rule.Rule(ds, Baseline.COMPLEMENT)
+    print(r._cover)
     r.add_item(1)
 
-    e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10)
-    e._subgroupSetUpdate(new_rule=r)
+#    e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10)
+    # e._subgroupSetUpdate(new_rule=r)
