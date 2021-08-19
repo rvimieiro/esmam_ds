@@ -66,45 +66,6 @@ class Esmam(Algorithm):
         self.__pheromone = np.ones(n_items) / n_items
         return
 
-    def _heuristicInitialisation(self):
-        """Initialise the heuristic values vector."""
-        n_items = self._dataset.get_number_of_items()
-        self.__heuristic = np.zeros(n_items)
-        survival = self._dataset.survival
-        average_survival = survival.mean()
-
-        # passar isso pra tudo pra map
-        for item in range(self._dataset.get_number_of_items()):
-            items = set()
-            items.add(item)
-            transactions = self._dataset.get_transactions(items)
-
-            # elif len(transactions) < self.__min_cover_per_rule:
-            # self.__heuristic[item] = 0
-
-            # else:
-
-            number_of_transactions = len(transactions)
-            # checar se eh menor ou igual mesmo
-            transactions_below_avg = np.sum(
-                survival[transactions] < average_survival)
-            # desnecessario, somente olhar a diferenca entre os conjuntos
-            transactions_above_avg = np.sum(
-                survival[transactions] >= average_survival)
-            entropy = 0
-            prob1 = transactions_above_avg / number_of_transactions
-            prob2 = transactions_below_avg / number_of_transactions
-            # checar se prob1 ou prob2 sao 0, porque log2(0) -> inf
-            # caso positivo, entropy = 0
-            if prob1 != 0:
-                # entropy -= prob1 * math.log2(prob1)
-                entropy -= prob1 * np.log2(prob1)
-            if prob2 != 0:
-                # entropy -= prob2 * math.log2(prob2)
-                entropy -= prob2 * np.log2(prob2)
-            self.__heuristic[item] = 1 - entropy
-        return self.__heuristic
-
     def _searchInitialisation(self):
         pass
 
