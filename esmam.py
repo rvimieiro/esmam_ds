@@ -19,8 +19,10 @@ class Esmam(Algorithm):
     # atualizar a chamada do init com os parametros de entrada
     def __init__(self, dataset, baseline, alpha,
                  n_ants: int, max_uncovered_cases: int,
-                 n_rules_converg: int) -> None:
+                 n_rules_converg: int, __min_cover_per_rule) -> None:
+        
         super().__init__(dataset, baseline, alpha)
+
         self.__n_ants: int = n_ants
         self.__max_uncovered_cases: int = max_uncovered_cases
         self.__n_rules_converg: int = n_rules_converg
@@ -28,15 +30,21 @@ class Esmam(Algorithm):
         self.__currentColony: int = 0
         self.__pheromone: np.array = None
         self.__heuristic: np.array = None
-        # porcentagem de cobertura de todo o dataset
-        self.__min_cover_per_rule: float = None 
+        self.__min_cover_per_rule: float = None # given as %
         self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
 
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
+        # Heuristic is calculated only once
         self._heuristicInitialisation()
         while self.canCreateColony():
+            # Pheromone is initialised for each colony
             self._pheromoneInitialisation()
+
+            # New rule is found by colony
+            # subgroup search is responsible for:
+            #   1. Rule construction from probabilities
+            #   2. Rule pruning
             new_rule = self._subgroupSearch()
             # essa estrutura aqui de baixo talvez seja polemica
             if not self._subgroupSetUpdate(new_rule):
@@ -60,18 +68,19 @@ class Esmam(Algorithm):
 
     def _heuristicInitialisation(self):
         """Initialise the heuristic values vector."""
+        n_items = self._dataset.get_number_of_items()
         self.__heuristic = np.zeros(n_items)
         survival = self._dataset.survival
         average_survival = survival.mean()
-        
-        #passar isso pra tudo pra map
+
+        # passar isso pra tudo pra map
         for item in range(self._dataset.get_number_of_items()):
             items = set()
             items.add(item)
             transactions = self._dataset.get_transactions(items)
 
             # elif len(transactions) < self.__min_cover_per_rule:
-                # self.__heuristic[item] = 0
+            # self.__heuristic[item] = 0
 
             # else:
 
@@ -94,12 +103,55 @@ class Esmam(Algorithm):
                 # entropy -= prob2 * math.log2(prob2)
                 entropy -= prob2 * np.log2(prob2)
             self.__heuristic[item] = 1 - entropy
-        return
+        return self.__heuristic
 
+    def _searchInitialisation(self):
+        pass
+
+    def _heuristic_map(self):
+        """Initialise the heuristic values vector."""
+        n_items = self._dataset.get_number_of_items()
+        self.__heuristic = np.zeros(n_items)
+        for i in (map(self._calculate_item_heuristic, range(self._dataset.get_number_of_items()))):
+            print(i)
+
+    def _calculate_item_heuristic(self, item) -> float:
+            survival = self._dataset.survival
+            average_survival = survival.mean()
+
+            items = set()
+            items.add(item)
+            transactions = self._dataset.get_transactions(items)
+
+            # elif len(transactions) < self.__min_cover_per_rule:
+            # self.__heuristic[item] = 0
+
+            # else:
+
+            number_of_transactions = len(transactions)
+            # checar se eh menor ou igual mesmo
+            transactions_below_avg = np.sum(
+                survival[transactions] < average_survival)
+            # desnecessario, somente olhar a diferenca entre os conjuntos
+            transactions_above_avg = np.sum(
+                survival[transactions] >= average_survival)
+            entropy = 0
+            prob1 = transactions_above_avg / number_of_transactions
+            prob2 = transactions_below_avg / number_of_transactions
+            # checar se prob1 ou prob2 sao 0, porque log2(0) -> inf
+            # caso positivo, entropy = 0
+            if prob1 != 0:
+                # entropy -= prob1 * math.log2(prob1)
+                entropy -= prob1 * np.log2(prob1)
+            if prob2 != 0:
+                # entropy -= prob2 * math.log2(prob2)
+                entropy -= prob2 * np.log2(prob2)
+            return 1 - entropy
+    
 
     def _subgroupSearch(self):
         """loop da colonia"""
-        # ConstructRule()
+        #ConstructRule()
         #ant = 1
         #convergence = 1
         # self.__searchInitialisation()
@@ -149,10 +201,9 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
+    #############################################################
 
-    r = rule.Rule(ds, Baseline.COMPLEMENT)
-    print(r._cover)
-    r.add_item(1)
-
-#    e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10)
+    e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10, 10)
+    e._heuristic_map()
+    print(e._heuristicInitialisation())
     # e._subgroupSetUpdate(new_rule=r)

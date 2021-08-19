@@ -12,8 +12,7 @@ class Baseline(Enum):
 
 class Rule:
     """Implement a rule. A rule is composed of an antecedent. This antecedent
-    covers a subgroup and a this subgroup has an associated cover_survival
-    function.
+    covers a subgroup with an associated cover_survival function.
     """
 
     def __init__(self, Dataset, Baseline):
@@ -22,6 +21,8 @@ class Rule:
         self.Dataset: Dataset = Dataset
         # isso aqui ta errado #
         # precisa ser os indices, nao o tamanho #
+        # corrigido? sei la vamo ver
+        self._isUpdated = True
         self._cover = np.arange(self.Dataset.DataFrame.shape[0])
 
     @property
@@ -43,27 +44,28 @@ class Rule:
         in the Dataset's class item_map.
         """
         self._antecedent.add(item)
-        self.set_cover()
+        self._isUpdated = False
 
     def remove_item(self, item: tuple) -> None:
         """Remove item of the antecedent. The item is referred by its
         integer-valued index in the Dataset's class item_map.
         """
         self._antecedent.remove(item)
-        self.set_cover()
+        self._isUpdated = False
 
     def set_cover(self) -> None:
         """Set the rule cover. A rule's cover is defined as the set of
         transactions where each transaction contain, at least,
         every item of the antecedent."""
         self._cover = self.Dataset.get_transactions(self.antecedent)
+        self._isUpdated = True
 
     def get_cover(self):
         """Return Rule's cover."""
         return self._cover
 
     def get_cover_size(self) -> int:
-        """Return the size of a Rule's cover."""
+        """Return size of a Rule's cover."""
         return len(self._cover)
 
     def __population_quality(self) -> float:
@@ -91,6 +93,7 @@ class Rule:
 
         time = self.Dataset.survival
         status = self.Dataset.status
+        
         _, pvalue = sm.duration.survdiff(time, status, group)
         return 1 - pvalue
 
@@ -114,21 +117,32 @@ class Rule:
 
 if __name__ == "__main__":
 
+    # Path related trickery
     pwd = os.getcwd()
     path = pwd + '/datasets/breast-cancer_disc.xz'
 
+    # Initialize dataset class and load the data
+    # once again, should it not load everything up when __init__ happens?
     ds = dataset.Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
 
+    # Instatiate a rule object
     rule = Rule(ds, Baseline.COMPLEMENT)
+    # We add a item to it
     rule.add_item(6)
 
+    # Now another rule object
     another_rule = Rule(ds, Baseline.COMPLEMENT)
+    # We add the same item to it
     another_rule.add_item(6)
+    another_rule.add_item(10)
 
     rule.set_cover()
     another_rule.set_cover()
-
-    print(rule != another_rule)
+    
+    print(rule)
+    print(another_rule)
+    
+    print("Are the rules different?", rule != another_rule)

@@ -8,9 +8,10 @@ import pandas as pd
 class Dataset:
     """Take original data as a DataFrame and store data (except for target columns)
     as an array of observations where each observation is an array of its attributes'
-    values (except for target attributes)"""
+    values (except for target attributes).
+    """
 
-    def __init__(self, data_path, attr_survival_name, attr_event_name):
+    def __init__(self, data_path: str, attr_survival_name: str, attr_event_name: str):
         self.data_path = data_path
         self.DataFrame = None
         self.item_map = {}
@@ -34,7 +35,8 @@ class Dataset:
 
     def load_dataframe(self) -> None:
         """Read data from data_path and store it into a pandas DataFrame.
-        Every value in the dataset is converted to string type."""
+        Every value in the dataset is converted to string type.
+        """
         with open(self.data_path.split('.')[0] + '_dtypes.json', 'r') as f:
             dtypes = json.load(f)
         self.DataFrame = pd.read_csv(self.data_path, dtype=dtypes)
@@ -115,4 +117,3 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_transaction_array()
-    print(ds.get_transactions({3}))
