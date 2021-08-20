@@ -19,15 +19,15 @@ class Algorithm(ABC):
         self._rules: list = []
 
     @abstractmethod
-    def _searchInitialisation(self):
+    def _search_init(self):
         pass
 
     @abstractmethod
-    def _subgroupSearch(self):
+    def _subgroup_search(self):
         pass
 
     @abstractmethod
-    def _subgroupSetUpdate(self, new_rule) -> bool:
+    def _subgroup_set_update(self, new_rule) -> bool:
         pass
 
     @abstractmethod

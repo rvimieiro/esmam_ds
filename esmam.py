@@ -22,64 +22,71 @@ class Esmam(Algorithm):
 
         super().__init__(dataset, baseline, alpha)
 
+        # Total number of ants
         self.__n_ants: int = n_ants
+        # Thresholds for algorithm convergence
         self.__max_uncovered_cases: int = max_uncovered_cases
-        self.__n_rules_converg: int = n_rules_converg
-        self.__deltaUncovered: int = 0
-        self.__currentColony: int = 0
+        self.__n_rules_for_convergence: int = n_rules_converg
+        # Delta uncovered represents the iteration's change in the number of uncovered cases 
+        self.__delta_uncovered: int = 0
+        self.__current_colony: int = 0
+        # Pheromone and heuristic arrays have size equal to the total  number of items
         self.__pheromone: np.array = None
         self.__heuristic: np.array = None
+        # Minimum coverage per rule is expressed by a percentage of all transactions
         self.__min_cover_per_rule: float = min_cover_per_rule
+        # Initially, all transactions are uncovered
         self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
 
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
         # Heuristic is calculated only once
-        self._heuristicInitialisation()
+        self._heuristic_init()
         self._stagnation = 0
 
-        while self.canCreateColony():
+        while self._can_create_colony():
             # Pheromone is initialised for each colony
-            self._pheromoneInitialisation()
+            self._pheromone_init()
 
             # New rule is found by colony
             # subgroup search is responsible for:
             #   1. Rule construction from probabilities
             #   2. Rule pruning
-            new_rule = self._subgroupSearch()
+            new_rule = self._subgroup_search()
 
             # Discutir essa estrutura aqui:
-            self.__deltaUncovered = len(self.__uncovered_cases) 
-            self._subgroupSetUpdate(new_rule)
-            self.__deltaUncovered -= len(self.__uncovered_cases)
-            if self.__deltaUncovered == 0:
+            self.__delta_uncovered = len(self.__uncovered_cases) 
+            self._subgroup_set_update(new_rule)
+            self.__delta_uncovered -= len(self.__uncovered_cases)
+            if self.__delta_uncovered == 0:
                 self._stagnation += 1
-            if self._stagnation == self.__n_rules_converg:
+            if self._stagnation == self.__n_rules_for_convergence:
                 break
         return
 
-    def canCreateColony(self):
+    def _can_create_colony(self):
         """Return true if conditions for a new colony are satisfied."""
         # Conversar sobre mudança do critério de parada. Me ajude a lembrar?
         # Implementar o delta U, que eh se mudou o numero de casos cobertos
         # de uma colonia pra outra
         # numero de iteracoes em que delta U eh zero chegando em stag, break
         return len(self.__uncovered_cases) > self.__max_uncovered_cases or \
-            self.__currentColony < self.__n_ants
+            self.__current_colony < self.__n_ants
 
-    def _pheromoneInitialisation(self):
+    def _pheromone_init(self):
         """Initialize pheromone vector."""
         n_items = self._dataset.get_number_of_items()
         self.__pheromone = np.ones(n_items) / n_items
         return
 
-    def _searchInitialisation(self):
+    def _search_init(self):
         pass
 
     def _heuristic_map(self):
         """Initialise the heuristic values vector."""
         n_items = self._dataset.get_number_of_items()
         self.__heuristic = np.zeros(n_items)
+        print("Displaying heuristic calculation...")
         for i in (map(self._calculate_item_heuristic, range(self._dataset.get_number_of_items()))):
             print('Entropy:', i)
 
@@ -117,16 +124,16 @@ class Esmam(Algorithm):
 
             return 1 - entropy
 
-    def _subgroupSearch(self):
+    def _subgroup_search(self):
         """loop da colonia"""
         # ConstructRule()
         #ant = 1
         #convergence = 1
-        # self.__searchInitialisation()
+        # self.__search_init()
         #last_rule = None
         # while ant < self.n_ants or convergence <= self.n_rules_converg:
         #last_rule = rule
-        #rule = self.__subgroupSearch()
+        #rule = self.__subgroup_search()
         # if last_rule == rule:
         #convergence += 1
         # else:
@@ -134,9 +141,9 @@ class Esmam(Algorithm):
         #ant += 1
         # PruneRule()
         # PheromoneUpdating()
-        # return super()._subgroupSearch()
+        # return super()._subgroup_search()
 
-    def _subgroupSetUpdate(self, new_rule) -> bool:
+    def _subgroup_set_update(self, new_rule) -> bool:
         """Update list of rules with or without the new rule.
         If discovered rule cannot be added, break the colony of ants.
         """
@@ -150,12 +157,12 @@ class Esmam(Algorithm):
 
                 # atualizacao do delta uncovered
                 # verificar melhor aqui, passar essas etapas
-                # para fora da funcao _subgroupSetUpdate
-                # self.__deltaUncovered = len(self.__uncovered_cases)
+                # para fora da funcao _subgroup_set_update
+                # self.__delta_uncovered = len(self.__uncovered_cases)
 
                 self.__uncovered_cases = np.setdiff1d(
                     self.__uncovered_cases, new_rule.get_cover())
-                # self.__deltaUncovered -= len(self.__uncovered_cases)
+                # self.__delta_uncovered -= len(self.__uncovered_cases)
             return True
         else:
             return False
@@ -175,4 +182,4 @@ if __name__ == "__main__":
 
     e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100, 100, 10, min_cover_per_rule=.1)
     e._heuristic_map()
-    # e._subgroupSetUpdate(new_rule=r)
+    # e._subgroup_set_update(new_rule=r)
