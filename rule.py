@@ -19,10 +19,8 @@ class Rule:
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
         self.Dataset: Dataset = Dataset
-        # isso aqui ta errado #
-        # precisa ser os indices, nao o tamanho #
-        # corrigido? sei la vamo ver
         self._isUpdated = True
+        # <- checar se está ok
         self._cover = np.arange(self.Dataset.DataFrame.shape[0])
 
     @property
@@ -62,7 +60,11 @@ class Rule:
 
     def get_cover(self):
         """Return Rule's cover."""
-        return self._cover
+        if self._isUpdated:
+            return self._cover
+        else:
+            self.set_cover()
+            return self._cover
 
     def get_cover_size(self) -> int:
         """Return size of a Rule's cover."""
@@ -71,9 +73,7 @@ class Rule:
     def __population_quality(self) -> float:
         """Calculate rule's quality based on population comparison."""
         population_identifier = np.zeros(shape=len(self.Dataset.DataFrame))
-
         subgroup_identifier = np.ones(shape=len(self.get_cover()))
-
         group = np.concatenate((population_identifier,
                                 subgroup_identifier))
 
@@ -93,13 +93,14 @@ class Rule:
 
         time = self.Dataset.survival
         status = self.Dataset.status
-        
+
         _, pvalue = sm.duration.survdiff(time, status, group)
         return 1 - pvalue
 
     def quality(self) -> float:
         """Calculate the Rule's quality according to Logrank test."""
-        self.set_cover()
+        if not self._isUpdated:
+            self.set_cover()
         if len(self._cover) == 0:
             return 0
         else:
@@ -141,8 +142,8 @@ if __name__ == "__main__":
 
     rule.set_cover()
     another_rule.set_cover()
-    
+
     print(rule)
     print(another_rule)
-    
+
     print("Are the rules different?", rule != another_rule)
