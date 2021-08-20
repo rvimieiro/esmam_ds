@@ -16,7 +16,7 @@ class Dataset:
         self.DataFrame = None
         self.item_map = {}
         self.items_list = []
-        self.binary_transactions = []
+        self.binary_tx = []
         self._surv_col_name = attr_survival_name
         self._status_col_name = attr_event_name
         self.attribute_columns = None
@@ -65,48 +65,48 @@ class Dataset:
         """Return number of items in the items' map."""
         return len(self.item_map)
 
-    def transaction_as_binary(self, transaction: pd.Series) -> np.array:
-        """Return transaction as binary array. 
+    def tx_as_binary(self, tx: pd.Series) -> np.array:
+        """Return tx as binary array. 
         Bits are set for the observed items at indexes set by the original mapping.
         """
-        transaction_items_indexes = [
-            self.item_map[(attribute, transaction[attribute])]
+        tx_items_indexes = [
+            self.item_map[(attribute, tx[attribute])]
             for attribute in self.attribute_columns
         ]
-        transaction_array = np.zeros(len(self.item_map), dtype=int)
-        transaction_array.put(transaction_items_indexes, 1)
-        return np.packbits(transaction_array)
+        tx_array = np.zeros(len(self.item_map), dtype=int)
+        tx_array.put(tx_items_indexes, 1)
+        return np.packbits(tx_array)
 
-    def make_transaction_array(self) -> None:
-        """Construct binary matrix of transactions.
-        Shape is number of transactions by the number of different items.
+    def make_tx_array(self) -> None:
+        """Construct binary matrix of tx.
+        Shape is number of tx by the number of different items.
         """
         a = self.DataFrame.apply(
-            self.transaction_as_binary, axis=1
+            self.tx_as_binary, axis=1
         )
-        self.binary_transactions = np.stack(a.values, axis=0)
+        self.binary_tx = np.stack(a.values, axis=0)
 
-    def get_transactions(self, items: set()) -> np.array:
-        """Return all transactions covered by a set of items."""
+    def get_tx(self, items: set()) -> np.array:
+        """Return all tx covered by a set of items."""
         mask = np.zeros(len(self.item_map), dtype=int)
         mask.put(list(items), 1)
 
         binary_mask = np.packbits(mask)
-        covered_transactions = np.bitwise_and(
-            binary_mask, self.binary_transactions
+        covered_tx = np.bitwise_and(
+            binary_mask, self.binary_tx
         )
 
         return np.nonzero(
             np.apply_along_axis(
                 lambda x: np.all(np.equal(x, binary_mask)), 1,
-                covered_transactions
+                covered_tx
             )
         )[0]
 
-    def get_items(self, transactions: np.array) -> np.array:
-        """Get set of items covered by a set of transactions."""
+    def get_items(self, tx: np.array) -> np.array:
+        """Get set of items covered by a set of tx."""
         return np.nonzero(np.unpackbits(
-            np.bitwise_or.reduce(self.binary_transactions[transactions])
+            np.bitwise_or.reduce(self.binary_tx[tx])
         ))[0]
 
 
@@ -116,4 +116,5 @@ if __name__ == "__main__":
     ds = Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
-    ds.make_transaction_array()
+    ds.make_tx_array()
+    print('all good')

@@ -53,9 +53,9 @@ class Rule:
 
     def set_cover(self) -> None:
         """Set the rule cover. A rule's cover is defined as the set of
-        transactions where each transaction contain, at least,
+        tx where each tx contain, at least,
         every item of the antecedent."""
-        self._cover = self.Dataset.get_transactions(self.antecedent)
+        self._cover = self.Dataset.get_tx(self.antecedent)
         self._isUpdated = True
 
     def get_cover(self):
@@ -127,7 +127,7 @@ if __name__ == "__main__":
     ds = dataset.Dataset(path, "survival_time", "survival_status")
     ds.load_dataframe()
     ds.map_items()
-    ds.make_transaction_array()
+    ds.make_tx_array()
 
     # Instatiate a rule object
     rule = Rule(ds, Baseline.COMPLEMENT)
