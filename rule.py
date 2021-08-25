@@ -18,9 +18,10 @@ class Rule:
     def __init__(self, Dataset, Baseline):
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
-        self.Dataset: Dataset = Datase
+        self.Dataset: Dataset = Dataset
         self._is_updated = True
-        self._cover = np.arange(self.Dataset.DataFrame.shape[0])
+        self._cover = np.arange(Dataset.size)
+        print(self._cover)
 
     @property
     def antecedent(self) -> set:
@@ -75,7 +76,7 @@ class Rule:
 
     def __population_quality(self) -> float:
         """Calculate rule's quality based on population comparison."""
-        population_identifier = np.zeros(shape=len(self.Dataset.DataFrame))
+        population_identifier = np.zeros(shape=self.Dataset.size)
         subgroup_identifier = np.ones(shape=len(self.get_cover()))
         group = np.concatenate((population_identifier,
                                 subgroup_identifier))
@@ -91,7 +92,7 @@ class Rule:
 
     def __complement_quality(self) -> float:
         """Calculate rule's quality based on complement comparison."""
-        group = np.zeros(shape=len(self.Dataset.DataFrame))
+        group = np.zeros(shape=self.Dataset.size)
         np.put(group, self.get_cover(), 1)
 
         time = self.Dataset.survival
@@ -126,9 +127,6 @@ if __name__ == "__main__":
     # Initialize dataset class and load the data
     # once again, should it not load everything up when __init__ happens?
     ds = dataset.Dataset(path, "survival_time", "survival_status")
-    ds.load_dataframe()
-    ds.map_items()
-    ds.make_tx_array()
 
     # Instatiate a rule object
     rule = Rule(ds, Baseline.COMPLEMENT)
