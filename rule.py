@@ -18,14 +18,12 @@ class Rule:
     def __init__(self, Dataset, Baseline):
         self._antecedent: set = set()
         self.baseline: Baseline = Baseline
-        self.Dataset: Dataset = Dataset
-        self._isUpdated = True
-        # <- checar se está ok
+        self.Dataset: Dataset = Datase
+        self._is_updated = True
         self._cover = np.arange(self.Dataset.DataFrame.shape[0])
 
     @property
     def antecedent(self) -> set:
-        """Get the Rule antecedent."""
         return self._antecedent
 
     @antecedent.setter
@@ -33,6 +31,7 @@ class Rule:
         self._antecedent = new_antecedent
 
     def __eq__(self, o: object) -> bool:
+        """Compare two rules for equality."""
         if not isinstance(o, Rule):
             return NotImplemented
         return self._antecedent == o._antecedent
@@ -42,25 +41,25 @@ class Rule:
         in the Dataset's class item_map.
         """
         self._antecedent.add(item)
-        self._isUpdated = False
+        self._is_updated = False
 
     def remove_item(self, item: tuple) -> None:
         """Remove item of the antecedent. The item is referred by its
         integer-valued index in the Dataset's class item_map.
         """
         self._antecedent.remove(item)
-        self._isUpdated = False
+        self._is_updated = False
 
     def set_cover(self) -> None:
         """Set the rule cover. A rule's cover is defined as the set of
         tx where each tx contain, at least,
         every item of the antecedent."""
         self._cover = self.Dataset.get_tx(self.antecedent)
-        self._isUpdated = True
+        self._is_updated = True
 
     def get_cover(self):
         """Return Rule's cover."""
-        if self._isUpdated:
+        if self._is_updated:
             return self._cover
         else:
             self.set_cover()
@@ -68,7 +67,11 @@ class Rule:
 
     def get_cover_size(self) -> int:
         """Return size of a Rule's cover."""
-        return len(self._cover)
+        if self._is_updated:
+            return len(self._cover)
+        else:
+            self.set_cover()
+            return len(self._cover)
 
     def __population_quality(self) -> float:
         """Calculate rule's quality based on population comparison."""
@@ -99,9 +102,7 @@ class Rule:
 
     def quality(self) -> float:
         """Calculate the Rule's quality according to Logrank test."""
-        if not self._isUpdated:
-            self.set_cover()
-        if len(self._cover) == 0:
+        if self.get_cover_size() == 0:
             return 0
         else:
             if self.baseline == Baseline.COMPLEMENT:

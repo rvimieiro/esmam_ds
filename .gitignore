@@ -13,6 +13,9 @@ _*
 # C extensions
 *.so
 
+# Experiments
+exp/
+
 # Distribution / packaging
 .Python
 build/

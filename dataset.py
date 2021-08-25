@@ -21,6 +21,10 @@ class Dataset:
         self._status_col_name = attr_event_name
         self.attribute_columns = None
 
+       # self.load_dataframe()
+       # self.map_items()
+       # self.make_tx_array()
+
     @property
     def survival(self) -> np.array:
         return self.DataFrame[self._surv_col_name].values
@@ -35,7 +39,6 @@ class Dataset:
 
     def load_dataframe(self) -> None:
         """Read data from data_path and store it into a pandas DataFrame.
-        Every value in the dataset is converted to string type.
         """
         with open(self.data_path.split('.')[0] + '_dtypes.json', 'r') as f:
             dtypes = json.load(f)
@@ -71,8 +74,8 @@ class Dataset:
         """
         tx_items_indexes = [
             self.item_map[(attribute, tx[attribute])]
-            for attribute in self.attribute_columns
-        ]
+            for attribute in self.attribute_columns]
+
         tx_array = np.zeros(len(self.item_map), dtype=int)
         tx_array.put(tx_items_indexes, 1)
         return np.packbits(tx_array)
@@ -82,8 +85,8 @@ class Dataset:
         Shape is number of tx by the number of different items.
         """
         a = self.DataFrame.apply(
-            self.tx_as_binary, axis=1
-        )
+            self.tx_as_binary, axis=1)
+
         self.binary_tx = np.stack(a.values, axis=0)
 
     def get_tx(self, items: set()) -> np.array:
@@ -93,21 +96,17 @@ class Dataset:
 
         binary_mask = np.packbits(mask)
         covered_tx = np.bitwise_and(
-            binary_mask, self.binary_tx
-        )
+            binary_mask, self.binary_tx)
 
         return np.nonzero(
             np.apply_along_axis(
                 lambda x: np.all(np.equal(x, binary_mask)), 1,
-                covered_tx
-            )
-        )[0]
+                covered_tx))[0]
 
     def get_items(self, tx: np.array) -> np.array:
         """Get set of items covered by a set of tx."""
         return np.nonzero(np.unpackbits(
-            np.bitwise_or.reduce(self.binary_tx[tx])
-        ))[0]
+            np.bitwise_or.reduce(self.binary_tx[tx])))[0]
 
 
 if __name__ == "__main__":
@@ -117,4 +116,3 @@ if __name__ == "__main__":
     ds.load_dataframe()
     ds.map_items()
     ds.make_tx_array()
-    print('all good')

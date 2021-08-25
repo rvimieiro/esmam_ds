@@ -16,39 +16,30 @@ class Baseline(Enum):
 class Esmam(Algorithm):
     """Exceptional Survival Model Ant Miner"""
 
-    def __init__(self, dataset, baseline, alpha,
+    def __init__(self, dataset, baseline, alpha: float,
                  n_ants: int, max_uncovered_cases: int,
                  n_rules_converg: int, min_cover_per_rule: float) -> None:
 
         super().__init__(dataset, baseline, alpha)
-
-        # Total number of ants
         self.__n_ants: int = n_ants
-        # Thresholds for algorithm convergence
         self.__max_uncovered_cases: int = max_uncovered_cases
         self.__n_rules_for_convergence: int = n_rules_converg
-        # Delta uncovered represents the iteration's change in the number of uncovered cases
         self.__delta_uncovered: int = 0
         self.__current_colony: int = 0
-        # Pheromone and heuristic arrays have size equal to the total  number of items
         self.__pheromone: np.array = None
         self.__heuristic: np.array = None
-        # Minimum coverage per rule is expressed by a percentage of all tx
-        self.__min_cover_per_rule: float = min_cover_per_rule
-        # Initially, all tx are uncovered
+        self.__min_cover_per_rule: float = min_cover_per_rule * \
+            self._dataset.DataFrame.shape[0]
         self.__uncovered_cases = np.arange(self._dataset.DataFrame.shape[0])
+        self.__available_items = np.ones(self._dataset.get_number_of_items())
 
     def run(self) -> None:
         """Execute ESMAM Algorithm."""
 
-        # Heuristic is calculated only once
-        self._heuristic_init()
         # Initialize stagnation (would it be better initialising it in __init__?)
         self._stagnation = 0
-
         while self._can_create_colony():
-            # Pheromone is initialised for each colony
-            self._pheromone_init()
+            self._search_init()
 
             # New rule is found by colony
             # subgroup search is responsible for:
@@ -63,11 +54,17 @@ class Esmam(Algorithm):
 
             if self.__delta_uncovered == 0:
                 self._stagnation += 1
+            else:
+                self._stagnation = 0
+                # stagnation - intercolony
+                # j - rule convergence - intracolony
+                #   j fica dentro do subgroup search
 
-            # Is this right?
+            # Is this right? NO
             # may be mixing stagnation and rules for convergence
-            if self._stagnation == self.__n_rules_for_convergence:
-                break
+            # if self._stagnation == self.__n_rules_for_convergence:
+            #    break
+
         return
 
     def _can_create_colony(self) -> bool:
@@ -87,16 +84,19 @@ class Esmam(Algorithm):
         return
 
     def _search_init(self):
+        """Initialize pheromone and heuristic values
+        associated with each item of the dataset.
+        """
+        if self.__heuristic == None:
+            self._heuristic_map()
+        self._pheromone_init()
         pass
 
     def _heuristic_map(self):
-        """Initialise the heuristic values vector."""
-        ### ATUALMENTE SOMENTE IMPRIME RESULTADOS ###
+        """Initialize the heuristic values vector."""
         n_items = self._dataset.get_number_of_items()
-        self.__heuristic = np.zeros(n_items)
-        print("Displaying heuristic calculation...")
-        for i in (map(self._calculate_item_heuristic, range(self._dataset.get_number_of_items()))):
-            print('Entropy:', i)
+        self.__heuristic = np.fromiter(map(self._calculate_item_heuristic, range(
+            self._dataset.get_number_of_items())), dtype=float)
 
     def _calculate_item_heuristic(self, item) -> float:
         """Calculate the heuristic value for an individual item."""
@@ -109,57 +109,55 @@ class Esmam(Algorithm):
         tx = self._dataset.get_tx(items)
         n_tx = len(tx)
 
-        ###########################################################
-        input()
-        print('Item tx:', len(tx))
-        print('Minimum cover per rule:', self.__min_cover_per_rule *
-              self._dataset.DataFrame.shape[0])
-        ###########################################################
-
         # Number of tx covered by the item must be greater
         # then user-set minimum coverage per rule treshold.
-        if n_tx < self.__min_cover_per_rule * self._dataset.DataFrame.shape[0]:
+        if n_tx < self.__min_cover_per_rule:
             return 0
         else:
             tx_above_avg = np.sum(survival[tx] >= avg_survival)
             entropy = 0
             prob1 = tx_above_avg / n_tx
             prob2 = (n_tx - tx_above_avg) / n_tx
-            print('Probability 1st class:', prob1)
-            print('Probability 2st class:', prob2)
-            # checar se prob1 ou prob2 sao 0, porque log2(0) -> inf
-            # caso positivo, entropy = 0
             if prob1 != 0:
-                # entropy -= prob1 * math.log2(prob1)
                 entropy -= prob1 * np.log2(prob1)
             if prob2 != 0:
-                # entropy -= prob2 * math.log2(prob2)
                 entropy -= prob2 * np.log2(prob2)
-
             return 1 - entropy
 
-    def _subgroup_search(self):
-        """loop da colonia"""
-        # ConstructRule()
-        #ant = 1
-        #convergence = 1
-        # self.__search_init()
-        #last_rule = None
-        # while ant < self.n_ants or convergence <= self.n_rules_converg:
-        #last_rule = rule
-        #rule = self.__subgroup_search()
-        # if last_rule == rule:
-        #convergence += 1
-        # else:
-        #convergence = 1
-        #ant += 1
-        # PruneRule()
-        # PheromoneUpdating()
-        # return super()._subgroup_search()
+    def _subgroup_search(self) -> rule.Rule:
+        """Execute a colony of ants resulting in a new rule."""
+        ant: int = 0
+        convergence: int = 0
+        last_rule: rule.Rule = None
+        best_rule: rule.Rule = None
+
+        while ant <= self.__n_ants or convergence <= self.__n_rules_for_convergence:
+            current_rule = self.build_description()
+            current_rule = self.prune_description(current_rule)
+            self.pheromone_update(current_rule)
+            if current_rule.quality() > best_rule.quality():
+                best_rule = current_rule
+            if current_rule == last_rule:
+                convergence += 1
+            else:
+                convergence = 0
+            last_rule = current_rule
+            ant += 1
+
+        return best_rule
+
+
+
+    def _item_probability(self, item: int) -> float:
+        """Calculate item's probability of being picked up by an ant."""
+        numerator = self.__heuristic[item] * self.__pheromone[item]
+        denominator = None
+        pass
 
     def _subgroup_set_update(self, new_rule) -> bool:
         """Update list of rules with or without the new rule.
-        If discovered rule cannot be added, break the colony of ants.
+        If discovered rule cannot be added, send a False flag
+        to break the current colony of ants.
         """
         if new_rule.quality() > 1 - self._alpha:
             can_add_rule = True
@@ -168,15 +166,8 @@ class Esmam(Algorithm):
                     can_add_rule = False
             if can_add_rule:
                 self._rules.append(new_rule)
-
-                # atualizacao do delta uncovered
-                # verificar melhor aqui, passar essas etapas
-                # para fora da funcao _subgroup_set_update
-                # self.__delta_uncovered = len(self.__uncovered_cases)
-
                 self.__uncovered_cases = np.setdiff1d(
                     self.__uncovered_cases, new_rule.get_cover())
-                # self.__delta_uncovered -= len(self.__uncovered_cases)
             return True
         else:
             return False
@@ -196,5 +187,5 @@ if __name__ == "__main__":
 
     e = Esmam(ds, Baseline.COMPLEMENT, 0.5, 100,
               100, 10, min_cover_per_rule=.1)
-    e._heuristic_map()
+    e._search_init()
     # e._subgroup_set_update(new_rule=r)
